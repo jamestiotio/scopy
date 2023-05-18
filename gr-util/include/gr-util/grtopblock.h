@@ -14,13 +14,17 @@ public:
 	GRTopBlock(QString name, QObject *parent = nullptr);
 	~GRTopBlock();
 	GRSignalPath* addSignalPath(QString name);
+	QList<GRSignalPath*> signalPaths() { return m_signalPaths;}
+
 	gr::top_block_sptr build();
+	void unbuild();
+	void connect(gr::basic_block_sptr src, int srcPort, gr::basic_block_sptr dst, int dstPort);
 
 	gr::top_block_sptr getGrBlock();
 
 private:
 	gr::top_block_sptr top;
-	QString name;
+	QString m_name;
 
 	QList<GRSignalPath*> m_signalPaths;
 };

@@ -1,4 +1,7 @@
 #include "grtopblock.h"
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(TOPBLOCK, "GRTopBlock")
 
 using namespace scopy;
 GRTopBlock::GRTopBlock(QString name, QObject *parent)
@@ -18,7 +21,7 @@ GRSignalPath *GRTopBlock::addSignalPath(QString name) {
 }
 
 gr::top_block_sptr GRTopBlock::build() {
-	top = gr::make_top_block(name.toStdString());
+	top = gr::make_top_block(m_name.toStdString());
 
 	for(GRSignalPath* sig : m_signalPaths) {
 		if(sig->enabled() ) {
@@ -28,16 +31,18 @@ gr::top_block_sptr GRTopBlock::build() {
 	return top;
 }
 
-// test vector with vector  / dump flattened
-// add more blocks (?)
-// implement math
-// implement recursive build (?)
-// implement multiple signalPath sources (?)
-// test sources
-// test enable disable
-// test rebuild
-// test cleanup
+void GRTopBlock::unbuild() {
+	for(GRSignalPath* sig : m_signalPaths) {
+		sig->disconnect_blk(this);
+	}
+	top->disconnect_all();
+}
 
-
+void GRTopBlock::connect(gr::basic_block_sptr src, int srcPort, gr::basic_block_sptr dst, int dstPort)
+{
+	qDebug(TOPBLOCK) << "Connecting " << QString::fromStdString(src->name()) << ":" << srcPort
+					 << "to" << QString::fromStdString(dst->name()) << ":" << dstPort;
+	top->connect(src,srcPort,dst,dstPort);
+}
 
 gr::top_block_sptr GRTopBlock::getGrBlock() { return top; }

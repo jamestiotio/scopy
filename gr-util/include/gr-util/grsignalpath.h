@@ -12,17 +12,18 @@ class SCOPY_GR_UTIL_EXPORT GRSignalPath : public GRProxyBlock {
 	Q_OBJECT
 public:
 	GRSignalPath(QString name, QObject *parent = nullptr);
-
-	GRProxyBlock* endPoint();
 	void append(GRProxyBlock* p);
 	void build_blks();
 	void destroy_blks();
+	virtual gr::basic_block_sptr getGrStartPoint();
+	virtual gr::basic_block_sptr getGrEndPoint();
 	virtual void connect_blk(GRTopBlock *top, GRProxyBlock *src);
+	virtual void disconnect_blk(GRTopBlock *top);
+	QString name() const;
 
-	virtual void disconnect_blk();
 protected:
 	QList<GRProxyBlock*> list;
-	QString name;
+	QString m_name;
 };
 }
 #endif // GRSIGNALPATH_H

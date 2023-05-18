@@ -25,8 +25,9 @@ public:
 
 	void setEnabled(bool v);
 	bool enabled();
-	gr::basic_block_sptr getGrStartPoint();
-	gr::basic_block_sptr getGrEndPoint();
+	bool built();
+	virtual gr::basic_block_sptr getGrStartPoint();
+	virtual gr::basic_block_sptr getGrEndPoint();
 protected:
 	gr::basic_block_sptr start_blk;
 	gr::basic_block_sptr end_blk;
@@ -40,16 +41,19 @@ class SCOPY_GR_UTIL_EXPORT GRSignalSrc : public GRProxyBlock {
 	Q_OBJECT
 public:
 	GRSignalSrc(QObject *parent = nullptr) : GRProxyBlock(parent) {};
-	void setSamplingFreq(double sr) { m_sampling_frequency = sr;}
-	void setFreq(double f) { m_freq = f;}
-	void setPhase(double ph) { m_phase = ph;}
-	void setAmplitude(double ampl) { m_amplitude = ampl; }
-	void setOffset(double off) { m_offset = off;}
+	void setWaveform(gr::analog::gr_waveform_t waveform);
+	void setSamplingFreq(double sr);
+	void setFreq(double f);
+	void setPhase(double ph);
+	void setAmplitude(double ampl);
+	void setOffset(double off);
 
 	void build_blks(GRTopBlock *top);
 	void destroy_blks(GRTopBlock *top);
 
 protected:
+	gr::analog::sig_source_f::sptr sig;
+	gr::analog::gr_waveform_t m_waveform;
 	double m_sampling_frequency;
 	double m_freq;
 	double m_phase;
@@ -60,8 +64,8 @@ protected:
 class SCOPY_GR_UTIL_EXPORT GRScaleOffsetProc : public GRProxyBlock {
 public:
 	GRScaleOffsetProc(QObject *parent = nullptr) : GRProxyBlock(parent) {};
-	void setScale(double sc) { m_scale = sc;}
-	void setOffset(double off) { m_offset = off;}
+	void setScale(double sc);
+	void setOffset(double off);
 	void build_blks(GRTopBlock *top);
 
 	void destroy_blks(GRTopBlock *top);
