@@ -27,7 +27,10 @@ void GRProxyBlock::disconnect_blk(GRTopBlock *top) {
 	top->getGrBlock()->disconnect(start_blk);
 }
 
-void GRProxyBlock::setEnabled(bool v) { m_enabled = v; }
+void GRProxyBlock::setEnabled(bool v) {
+	m_enabled = v;
+	// blockSignals(!v); // to prevent rebuilding from non-enabled blocks - maybe
+}
 
 bool GRProxyBlock::enabled() { return m_enabled; }
 
@@ -38,6 +41,8 @@ bool GRProxyBlock::built()
 
 gr::basic_block_sptr GRProxyBlock::getGrStartPoint() { return start_blk; }
 gr::basic_block_sptr GRProxyBlock::getGrEndPoint() { return end_blk; }
+
+GRSignalSrc::GRSignalSrc(QObject *parent) : GRProxyBlock(parent) {}
 
 void GRSignalSrc::setWaveform(gr::analog::gr_waveform_t waveform)
 {
@@ -87,6 +92,8 @@ void GRSignalSrc::destroy_blks(GRTopBlock *top) {
 	sig = nullptr;
 
 }
+
+GRScaleOffsetProc::GRScaleOffsetProc(QObject *parent) : GRProxyBlock(parent) {}
 
 void GRScaleOffsetProc::setScale(double sc) {
 	m_scale = sc;

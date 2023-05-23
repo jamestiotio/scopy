@@ -8,6 +8,7 @@ GRSignalPath::GRSignalPath(QString name, QObject *parent) : GRProxyBlock(parent)
 
 void GRSignalPath::append(GRProxyBlock *p) {	
 	list.append(p);
+	connect(p,SIGNAL(requestRebuild()),this,SIGNAL(requestRebuild()));
 }
 
 void GRSignalPath::build_blks() {
@@ -45,7 +46,8 @@ gr::basic_block_sptr GRSignalPath::getGrEndPoint()
 void GRSignalPath::connect_blk(GRTopBlock *top, GRProxyBlock *src) {
 	GRProxyBlock* prevBlk = src;
 	for(GRProxyBlock* blk : list) {
-		if(blk->enabled() && !blk->built()) {
+		if(blk->enabled() && !blk->built()
+			/*  (|| (blk == list[0] && list.count() > 1)) - an enabled signal path always needs a source enabled - unless it's the only one I guess */ ) {
 			blk->build_blks(top);
 			blk->connect_blk(top, prevBlk);
 			prevBlk = blk;

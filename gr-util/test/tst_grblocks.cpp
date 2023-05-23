@@ -16,6 +16,8 @@ private Q_SLOTS:
 	void test1();
 	void test2();
 	void test3();
+	void test4();
+	void test5();
 private:
 	std::vector<gr::blocks::vector_sink_f::sptr> connectVectorSinks(GRTopBlock* top); // return vec sinks
 	QVector<float> computeSigSourceExpected(gr::analog::gr_waveform_t wave, float ampl, float offset, float sr, float freq, float scale_1, float offset_1);
@@ -130,7 +132,7 @@ void TST_GRBlocks::test1() {
 		QCOMPARE(res, expected);
 	}
 
-	top.unbuild();
+	top.teardown();
 	scale_offset->setEnabled(false); // disabling requires rebuild - should this be handled internally (?)
 	qInfo()<<"disabled block in signal path";
 	top.build();
@@ -214,7 +216,7 @@ void TST_GRBlocks::test3() {
 	GRScaleOffsetProc *scale_offset_1;
 	GRScaleOffsetProc *scale_offset_2;
 
-	ch1 = top.addSignalPath("iio1"); // - do not add signalpath to the block as it will create an output
+	ch1 = top.addSignalPath("iio1");
 	ch2 = top.addSignalPath("iio2");
 	ch3 = top.addSignalPath("iio3");
 
@@ -291,8 +293,45 @@ void TST_GRBlocks::test3() {
 			QCOMPARE(res, expectedAll[i]);
 		}
 	}
-	top.unbuild();
+	top.teardown();
 	ch2->setEnabled(false);
+	scale_offset_2->setEnabled(false);
+	top.build();
+
+	{
+		auto v = connectVectorSinks(&top);
+		top.getGrBlock()->run();
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+				 QString("sig_source0:0->head0:0\n"
+						 "head0:0->stream_to_vector0:0\n"
+						 "stream_to_vector0:0->vector_sink0:0\n"
+						 "sig_source1:0->head1:0\n"
+						 "head1:0->stream_to_vector1:0\n"
+						 "stream_to_vector1:0->vector_sink1:0\n"));
+
+
+		QVector<QVector<float>> expectedAll;
+
+		// constant no scale / offset block
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
+		// constant with scale and offset
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
+
+		for(int i = 0; i < v.size();i++) {
+
+			std::vector<float> data = v[i]->data();
+			QVector<float> res = QVector<float>(data.begin(),data.end());
+
+			qDebug()<<expectedAll[i];
+			qDebug()<<v[i]->data();
+
+			QCOMPARE(res, expectedAll[i]);
+		}
+	}
+
+	top.teardown();
+	ch1->setEnabled(false); // disable first signal path
+	ch2->setEnabled(true); // second signal path should use the first source indirectly
 	scale_offset_2->setEnabled(false);
 	top.build();
 
@@ -330,17 +369,27 @@ void TST_GRBlocks::test3() {
 }
 
 
+void TST_GRBlocks::test4() {
+}
+
+void TST_GRBlocks::test5() {
+}
+
+
+
 
 // tests:
-// implement math
-// test sources
-// test rebuild
+// what happens if you disable a source - source (first block of enabled path - cannot be disabled  - added commented out condition) - add test for this ??
+// test new GRTopBlock - // add run/reconfigure/connect sinks/run - to a top block manager (?) - top block management (?)
 // test cleanup // need GR debug build (?)
 
-// what happens if you disable a source (?)
-// figure out lifecycle for build/connect/disconnect/teardown - just getEndPoint - and build if reqquired - all goes recursively (?)
-// add run/reconfigure/connect sinks/run - to a top block manager (?) - top block management (?)
-// add more blocks (?) - dc blocker, soft trigger, head, audio source, file source, iio source (are all sources multiplexed ? )
+
+
+// figure out lifecycle for build/connect/disconnect/teardown - just getEndPoint - and build if required - all goes recursively (?) - QoL change - not necessary rn
+
+// add more blocks (?) - dc blocker, soft trigger, head, audio source, file source, iio source (are all sources multiplexed ?
+// sources should create placeholders and before finishing building should create actual blocks)
+// test all blocks
 
 QTEST_MAIN(TST_GRBlocks)
 //int main() {
