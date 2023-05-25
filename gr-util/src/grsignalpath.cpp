@@ -45,9 +45,10 @@ gr::basic_block_sptr GRSignalPath::getGrEndPoint()
 
 void GRSignalPath::connect_blk(GRTopBlock *top, GRProxyBlock *src) {
 	GRProxyBlock* prevBlk = src;
-	for(GRProxyBlock* blk : list) {
+	for(GRProxyBlock* blk : qAsConst(list)) {
 		if(blk->enabled() && !blk->built()
-			/*  (|| (blk == list[0] && list.count() > 1)) - an enabled signal path always needs a source enabled - unless it's the only one I guess */ ) {
+		|| (blk == list[0] && list.count() > 1)) // - an enabled signal path always needs a source enabled - unless it's the only one I guess */ )
+		{
 			blk->build_blks(top);
 			blk->connect_blk(top, prevBlk);
 			prevBlk = blk;
@@ -56,7 +57,7 @@ void GRSignalPath::connect_blk(GRTopBlock *top, GRProxyBlock *src) {
 }
 
 void GRSignalPath::disconnect_blk(GRTopBlock *top) {
-	for(GRProxyBlock* blk : list) {
+	for(GRProxyBlock* blk : qAsConst(list)) {
 		if(blk->built()) {
 			blk->disconnect_blk(top);
 			blk->destroy_blks(top);

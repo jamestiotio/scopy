@@ -39,6 +39,7 @@ void GRTopBlock::teardown() {
 		sig->disconnect_blk(this);
 	}
 	top->disconnect_all();
+	Q_EMIT teardownSignalPaths();
 }
 
 void GRTopBlock::start()
@@ -54,22 +55,34 @@ void GRTopBlock::stop()
 	top->wait(); // ??
 }
 
+void GRTopBlock::run()
+{
+	start();
+	top->wait();
+}
+
 void GRTopBlock::rebuild() {
-	if(running)
+	bool wasRunning = false;
+	if(running) {
+		wasRunning = true;
 		stop();
+	}
 
 	if(built) {
 		teardown();
 		build();
 	}
+
+	if(wasRunning) {
+		start();
+	}
 }
 
 void GRTopBlock::connect(gr::basic_block_sptr src, int srcPort, gr::basic_block_sptr dst, int dstPort)
 {
-	qDebug(TOPBLOCK) << "Connecting " << QString::fromStdString(src->name()) << ":" << srcPort
-					 << "to" << QString::fromStdString(dst->name()) << ":" << dstPort;
+	qDebug(TOPBLOCK) << "Connecting " << QString::fromStdString(src->symbol_name()) << ":" << srcPort
+					 << "to" << QString::fromStdString(dst->symbol_name()) << ":" << dstPort;
 	top->connect(src,srcPort,dst,dstPort);
 }
 
 gr::top_block_sptr GRTopBlock::getGrBlock() { return top; }
-/////////////////////////////

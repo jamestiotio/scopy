@@ -6,22 +6,26 @@
 #include <gnuradio/blocks/head.h>
 #include <gnuradio/blocks/stream_to_vector.h>
 #include <QVector>
+#include <QSignalSpy>
 
 using namespace scopy;
 
 class TST_GRBlocks : public QObject
 {
 	Q_OBJECT
-private Q_SLOTS:
+private Q_SLOTS: // these are tests
 	void test1();
 	void test2();
 	void test3();
 	void test4();
 	void test5();
-private:
-	std::vector<gr::blocks::vector_sink_f::sptr> connectVectorSinks(GRTopBlock* top); // return vec sinks
+
+public Q_SLOTS: // these are actual slots
+	void connectVectorSinks(); // return vec sinks
 	QVector<float> computeSigSourceExpected(gr::analog::gr_waveform_t wave, float ampl, float offset, float sr, float freq, float scale_1, float offset_1);
 
+private:
+	void connectVectorSinks(GRTopBlock* top); // return vec sinks
 	struct test1Params {
 		const int nr_samples = 100;
 		const float sig_ampl = 2;
@@ -35,10 +39,18 @@ private:
 		const float scale_2 = 2;
 
 	} t1;
+
+	std::vector<gr::blocks::vector_sink_f::sptr> testOutputs;
 };
 
-std::vector<gr::blocks::vector_sink_f::sptr> TST_GRBlocks::connectVectorSinks(GRTopBlock* top) {
+void TST_GRBlocks::connectVectorSinks() {
+	GRTopBlock* sender = dynamic_cast<GRTopBlock*>(QObject::sender());
+	connectVectorSinks(sender);
+}
 
+void TST_GRBlocks::connectVectorSinks(GRTopBlock* top) {
+
+	testOutputs.clear();
 	gr::blocks::head::sptr head;
 	gr::blocks::stream_to_vector::sptr s2v;
 	gr::blocks::vector_sink_f::sptr vec;
@@ -56,9 +68,8 @@ std::vector<gr::blocks::vector_sink_f::sptr> TST_GRBlocks::connectVectorSinks(GR
 		top->connect(endpoint, 0, head, 0);
 		top->connect(head, 0, s2v, 0);
 		top->connect(s2v, 0, vec, 0);
-		ret.push_back(vec);
-	}
-	return ret;
+		testOutputs.push_back(vec);
+	}	
 }
 
 QVector<float> TST_GRBlocks::computeSigSourceExpected(gr::analog::gr_waveform_t wave, float ampl, float offset, float sr, float freq, float scale_1, float offset_1) {
@@ -111,7 +122,7 @@ void TST_GRBlocks::test1() {
 	top.build();
 	qInfo() << "built flowgraph";
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 		sin1->setFreq(t1.sig_freq);             // change parameters after building
 		scale_offset->setOffset(t1.offset_1);
 		qInfo() << "modified scale_offset after build";
@@ -127,7 +138,7 @@ void TST_GRBlocks::test1() {
 
 
 		QVector<float> expected = computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq,t1.scale_1,t1.offset_1);
-		std::vector<float> data = v[0]->data();
+		std::vector<float> data = testOutputs[0]->data();
 		QVector<float> res = QVector<float>(data.begin(),data.end());
 		QCOMPARE(res, expected);
 	}
@@ -137,7 +148,7 @@ void TST_GRBlocks::test1() {
 	qInfo()<<"disabled block in signal path";
 	top.build();
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 		top.getGrBlock()->run();
 		// |sig_source| --> |head| --> |stream_to_vector| --> |vector_sink|
 		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
@@ -147,7 +158,7 @@ void TST_GRBlocks::test1() {
 
 
 		QVector<float> expected = computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0);
-		std::vector<float> data = v[0]->data();
+		std::vector<float> data = testOutputs[0]->data();
 		QVector<float> res = QVector<float>(data.begin(),data.end());
 		qDebug()<<res;
 
@@ -186,7 +197,7 @@ void TST_GRBlocks::test2() {
 	top.build();
 	qInfo() << "built flowgraph";
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 
 		top.getGrBlock()->run();
 
@@ -200,7 +211,7 @@ void TST_GRBlocks::test2() {
 
 		QVector<float> expected = computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_1, t1.offset_1);
 
-		std::vector<float> data = v[0]->data();
+		std::vector<float> data = testOutputs[0]->data();
 		QVector<float> res = QVector<float>(data.begin(),data.end());
 
 		QCOMPARE(res, expected);
@@ -257,7 +268,7 @@ void TST_GRBlocks::test3() {
 	top.build();
 	qInfo() << "built flowgraph";
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 		top.getGrBlock()->run();
 
 //		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
@@ -285,11 +296,11 @@ void TST_GRBlocks::test3() {
 		// third channel square wave
 		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_2, t1.offset_2));
 
-		for(int i = 0; i < v.size();i++) {
-			std::vector<float> data = v[i]->data();
+		for(int i = 0; i < testOutputs.size();i++) {
+			std::vector<float> data = testOutputs[i]->data();
 			QVector<float> res = QVector<float>(data.begin(),data.end());
 			qDebug()<<expectedAll[i];
-			qDebug()<<v[i]->data();
+			qDebug()<<testOutputs[i]->data();
 			QCOMPARE(res, expectedAll[i]);
 		}
 	}
@@ -299,7 +310,7 @@ void TST_GRBlocks::test3() {
 	top.build();
 
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 		top.getGrBlock()->run();
 		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
 				 QString("sig_source0:0->head0:0\n"
@@ -317,35 +328,168 @@ void TST_GRBlocks::test3() {
 		// constant with scale and offset
 		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
 
-		for(int i = 0; i < v.size();i++) {
+		for(int i = 0; i < testOutputs.size();i++) {
 
-			std::vector<float> data = v[i]->data();
+			std::vector<float> data = testOutputs[i]->data();
 			QVector<float> res = QVector<float>(data.begin(),data.end());
 
 			qDebug()<<expectedAll[i];
-			qDebug()<<v[i]->data();
+			qDebug()<<testOutputs[i]->data();
 
 			QCOMPARE(res, expectedAll[i]);
 		}
 	}
 
 	top.teardown();
+
+
+	qInfo()<<"This test verifies that a source can be accessed indirectly";
+
 	ch1->setEnabled(false); // disable first signal path
 	ch2->setEnabled(true); // second signal path should use the first source indirectly
+
 	scale_offset_2->setEnabled(false);
 	top.build();
 
 	{
-		auto v = connectVectorSinks(&top);
+		connectVectorSinks(&top);
 
 		top.getGrBlock()->run();
 		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
-		//		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
-		//				 QString("multiply_const_ff0:0->add_const_ff0:0\n"
-		//						 "sig_source0:0->multiply_const_ff0:0\n"
-		//						 "add_const_ff0:0->head0:0\n"
-		//						 "head0:0->stream_to_vector0:0\n"
-		//						 "stream_to_vector0:0->vector_sink0:0\n"));
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+			 QString(
+			     "multiply_const_ff0:0->add_const_ff0:0\n"
+			     "sig_source0:0->multiply_const_ff0:0\n"
+			     "add_const_ff0:0->head0:0\n"
+			     "head0:0->stream_to_vector0:0\n"
+			     "stream_to_vector0:0->vector_sink0:0\n"
+			     "sig_source1:0->head1:0\n"
+			     "head1:0->stream_to_vector1:0\n"
+			     "stream_to_vector1:0->vector_sink1:0\n"));
+
+
+		QVector<QVector<float>> expectedAll;
+
+		// constant no scale / offset block
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_1, t1.offset_1));
+		// constant with scale and offset
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
+
+		for(int i = 0; i < testOutputs.size();i++) {
+
+			std::vector<float> data = testOutputs[i]->data();
+			QVector<float> res = QVector<float>(data.begin(),data.end());
+
+			qDebug()<<expectedAll[i];
+			qDebug()<<testOutputs[i]->data();
+
+			QCOMPARE(res, expectedAll[i]);
+		}
+	}
+}
+
+
+void TST_GRBlocks::test4() {
+
+	qInfo() << "This testcase verifies if multiple signalpaths work for the same topblock";
+	GRTopBlock top("aa", this);
+	GRSignalPath *ch1,*ch2,*ch3;
+	GRSignalSrc *sin1, *sin2;
+	GRScaleOffsetProc *scale_offset_1;
+	GRScaleOffsetProc *scale_offset_2;
+
+	ch1 = top.addSignalPath("iio1");
+	ch2 = top.addSignalPath("iio2");
+	ch3 = top.addSignalPath("iio3");
+
+	sin1 = new GRSignalSrc(ch1);
+	sin2 = new GRSignalSrc(ch2);
+
+	scale_offset_1 = new GRScaleOffsetProc(ch2);
+	scale_offset_2 = new GRScaleOffsetProc(ch3);
+
+
+	sin1->setWaveform(gr::analog::GR_CONST_WAVE);
+	sin1->setSamplingFreq(t1.sig_sr);
+	sin1->setAmplitude(t1.sig_ampl);
+	sin1->setFreq(t1.sig_freq);
+
+	sin2->setWaveform(gr::analog::GR_SQR_WAVE);
+	sin2->setSamplingFreq(t1.sig_sr);
+	sin2->setAmplitude(t1.sig_ampl);
+	sin2->setFreq(t1.sig_freq);
+
+	scale_offset_1->setOffset(t1.offset_1);
+	scale_offset_1->setScale(t1.scale_1);
+
+	scale_offset_2->setOffset(t1.offset_2);
+	scale_offset_2->setScale(t1.scale_2);
+
+
+	/*   |sin1| --+------------------------- - ch1
+	 *            +---|scale_offset_1|------ - ch2
+	 *   |sin2| ------|scale_offset_2|------ - ch3
+	 */
+	ch1->append(sin1);
+	ch2->append(ch1);
+	ch2->append(scale_offset_1);
+	ch3->append(sin2);
+	ch3->append(scale_offset_2);
+
+	connect(&top,SIGNAL(builtSignalPaths()), this, SLOT(connectVectorSinks()));
+	top.build();
+	top.start();
+
+	{
+		top.getGrBlock()->wait(); // for testing purposes
+
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),    // where is sig_source_0? // leaked from prev testcase ..
+			 QString("multiply_const_ff0:0->add_const_ff0:0\n"
+				 "sig_source0:0->multiply_const_ff0:0\n"
+				 "multiply_const_ff1:0->add_const_ff1:0\n"
+				 "sig_source1:0->multiply_const_ff1:0\n"
+				 "sig_source0:0->head0:0\n"
+				 "head0:0->stream_to_vector0:0\n"
+				 "stream_to_vector0:0->vector_sink0:0\n"
+				 "add_const_ff0:0->head1:0\n"
+				 "head1:0->stream_to_vector1:0\n"
+				 "stream_to_vector1:0->vector_sink1:0\n"
+				 "add_const_ff1:0->head2:0\n"
+				 "head2:0->stream_to_vector2:0\n"
+				 "stream_to_vector2:0->vector_sink2:0\n"));
+
+
+		QVector<QVector<float>> expectedAll;
+		// constant no scale / offset block
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
+		// constant with scale and offset
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_1, t1.offset_1));
+		// third channel square wave
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_2, t1.offset_2));
+
+		for(int i = 0; i < testOutputs.size();i++) {
+			std::vector<float> data = testOutputs[i]->data();
+			QVector<float> res = QVector<float>(data.begin(),data.end());
+			qDebug()<<expectedAll[i];
+			qDebug()<<testOutputs[i]->data();
+			QCOMPARE(res, expectedAll[i]);
+		}
+	}
+
+	QSignalSpy spy(&top,SIGNAL(builtSignalPaths()));
+	ch2->setEnabled(false);
+	scale_offset_2->setEnabled(false);
+	QCOMPARE(spy.count(),2); // flowgraph rebuilt twice
+	{
+		top.getGrBlock()->wait(); // for testing purposes
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+			 QString("sig_source0:0->head0:0\n"
+				 "head0:0->stream_to_vector0:0\n"
+				 "stream_to_vector0:0->vector_sink0:0\n"
+				 "sig_source1:0->head1:0\n"
+				 "head1:0->stream_to_vector1:0\n"
+				 "stream_to_vector1:0->vector_sink1:0\n"));
 
 
 		QVector<QVector<float>> expectedAll;
@@ -355,21 +499,65 @@ void TST_GRBlocks::test3() {
 		// constant with scale and offset
 		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
 
-		for(int i = 0; i < v.size();i++) {
+		for(int i = 0; i < testOutputs.size();i++) {
 
-			std::vector<float> data = v[i]->data();
+			std::vector<float> data = testOutputs[i]->data();
 			QVector<float> res = QVector<float>(data.begin(),data.end());
 
 			qDebug()<<expectedAll[i];
-			qDebug()<<v[i]->data();
+			qDebug()<<testOutputs[i]->data();
 
 			QCOMPARE(res, expectedAll[i]);
 		}
 	}
-}
+	top.stop();
+	top.teardown();
+	QSignalSpy spy2(&top,SIGNAL(builtSignalPaths()));
+	ch2->setEnabled(true);
+	scale_offset_2->setEnabled(true);
+	QCOMPARE(spy2.count(),0); // flowgraph is not rebuilt because it was not built
+	top.build();
+	top.start();
+	QCOMPARE(spy2.count(),1); // built only once
+
+	{
+		top.getGrBlock()->wait(); // for testing purposes
+
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),    // where is sig_source_0? // leaked from prev testcase ..
+			 QString("multiply_const_ff0:0->add_const_ff0:0\n"
+				 "sig_source0:0->multiply_const_ff0:0\n"
+				 "multiply_const_ff1:0->add_const_ff1:0\n"
+				 "sig_source1:0->multiply_const_ff1:0\n"
+				 "sig_source0:0->head0:0\n"
+				 "head0:0->stream_to_vector0:0\n"
+				 "stream_to_vector0:0->vector_sink0:0\n"
+				 "add_const_ff0:0->head1:0\n"
+				 "head1:0->stream_to_vector1:0\n"
+				 "stream_to_vector1:0->vector_sink1:0\n"
+				 "add_const_ff1:0->head2:0\n"
+				 "head2:0->stream_to_vector2:0\n"
+				 "stream_to_vector2:0->vector_sink2:0\n"));
 
 
-void TST_GRBlocks::test4() {
+		QVector<QVector<float>> expectedAll;
+		// constant no scale / offset block
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, 1, 0));
+		// constant with scale and offset
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_CONST_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_1, t1.offset_1));
+		// third channel square wave
+		expectedAll.push_back(computeSigSourceExpected(gr::analog::GR_SQR_WAVE,t1.sig_ampl,t1.sig_offset,t1.sig_sr,t1.sig_freq, t1.scale_2, t1.offset_2));
+
+		for(int i = 0; i < testOutputs.size();i++) {
+			std::vector<float> data = testOutputs[i]->data();
+			QVector<float> res = QVector<float>(data.begin(),data.end());
+			qDebug()<<expectedAll[i];
+			qDebug()<<testOutputs[i]->data();
+			QCOMPARE(res, expectedAll[i]);
+		}
+	}
+
+
 }
 
 void TST_GRBlocks::test5() {
@@ -379,12 +567,7 @@ void TST_GRBlocks::test5() {
 
 
 // tests:
-// what happens if you disable a source - source (first block of enabled path - cannot be disabled  - added commented out condition) - add test for this ??
 // test new GRTopBlock - // add run/reconfigure/connect sinks/run - to a top block manager (?) - top block management (?)
-// test cleanup // need GR debug build (?)
-
-
-
 // figure out lifecycle for build/connect/disconnect/teardown - just getEndPoint - and build if required - all goes recursively (?) - QoL change - not necessary rn
 
 // add more blocks (?) - dc blocker, soft trigger, head, audio source, file source, iio source (are all sources multiplexed ?

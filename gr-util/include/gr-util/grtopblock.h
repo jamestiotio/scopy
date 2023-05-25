@@ -22,6 +22,7 @@ public:
 
 Q_SIGNALS:
 	void builtSignalPaths();
+	void teardownSignalPaths();
 
 public Q_SLOTS:
 	void build();
@@ -29,14 +30,13 @@ public Q_SLOTS:
 	void rebuild();
 	void start();
 	void stop();
+	void run();
 
 private:
 	gr::top_block_sptr top;
 	QString m_name;
 	bool running;
 	bool built;
-
-
 	QList<GRSignalPath*> m_signalPaths;
 };
 
