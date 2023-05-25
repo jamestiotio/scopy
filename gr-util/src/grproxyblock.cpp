@@ -1,5 +1,6 @@
 #include "grproxyblock.h"
 #include "grtopblock.h"
+#include "grlog.h"
 
 using namespace scopy::grutil;
 GRProxyBlock::GRProxyBlock(QObject *parent) : QObject(parent), m_enabled(true) {}

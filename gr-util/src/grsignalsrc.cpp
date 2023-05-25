@@ -1,8 +1,14 @@
 #include "grsignalsrc.h"
+#include "grlog.h"
 
 using namespace scopy::grutil;
 
 GRSignalSrc::GRSignalSrc(QObject *parent) : GRProxyBlock(parent) {}
+
+GRSignalSrc::~GRSignalSrc()
+{
+
+}
 
 void GRSignalSrc::setWaveform(gr::analog::gr_waveform_t waveform)
 {
@@ -41,6 +47,7 @@ void GRSignalSrc::setOffset(double off) {
 }
 
 void GRSignalSrc::build_blks(GRTopBlock *top) {
+	qDebug(SCOPY_GR_UTIL)<<"Building GRSignalSrc";
 	sig = gr::analog::sig_source_f::make(m_sampling_frequency, m_waveform, m_freq,m_amplitude,m_offset,m_phase);
 	start_blk.append(sig);
 	end_blk = sig;

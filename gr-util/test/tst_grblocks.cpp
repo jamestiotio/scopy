@@ -2,7 +2,6 @@
 #include "gr-util/grtopblock.h"
 #include "gr-util/grsignalpath.h"
 #include "gr-util/grproxyblock.h"
-#include "gnuradio/analog/sig_source.h"
 #include <gnuradio/blocks/vector_sink.h>
 #include <gnuradio/blocks/head.h>
 #include <gnuradio/blocks/stream_to_vector.h>
@@ -51,6 +50,7 @@ private:
 	} t1;
 
 	std::vector<gr::blocks::vector_sink_f::sptr> testOutputs;
+	std::vector<gr::blocks::vector_sink_c::sptr> testOutputs_c;
 };
 
 void TST_GRBlocks::connectVectorSinks() {
@@ -64,6 +64,7 @@ void TST_GRBlocks::connectVectorSinks(GRTopBlock* top) {
 	gr::blocks::head::sptr head;
 	gr::blocks::stream_to_vector::sptr s2v;
 	gr::blocks::vector_sink_f::sptr vec;
+	gr::blocks::vector_sink_c::sptr vec_c;
 
 	std::vector<gr::blocks::vector_sink_f::sptr> ret;
 
@@ -71,14 +72,28 @@ void TST_GRBlocks::connectVectorSinks(GRTopBlock* top) {
 		if(!path->enabled())
 			continue;
 		gr::basic_block_sptr endpoint = path->getGrEndPoint();
-		head = gr::blocks::head::make(sizeof(float),t1.nr_samples*2-1);
-		s2v = gr::blocks::stream_to_vector::make(sizeof(float), t1.nr_samples);
-		vec = gr::blocks::vector_sink_f::make(t1.nr_samples);
 
-		top->connect(endpoint, 0, head, 0);
-		top->connect(head, 0, s2v, 0);
-		top->connect(s2v, 0, vec, 0);
-		testOutputs.push_back(vec);
+		int size = endpoint->output_signature()->sizeof_stream_item(0);
+		if(size == sizeof(float)) {
+			head = gr::blocks::head::make(size,t1.nr_samples*2-1);
+			s2v = gr::blocks::stream_to_vector::make(size, t1.nr_samples);
+
+			vec = gr::blocks::vector_sink_f::make(t1.nr_samples);
+
+			top->connect(endpoint, 0, head, 0);
+			top->connect(head, 0, s2v, 0);
+			top->connect(s2v, 0, vec, 0);
+			testOutputs.push_back(vec);
+		} else if(size == sizeof(gr_complex)) {
+			head = gr::blocks::head::make(size,t1.nr_samples*2-1);
+			s2v = gr::blocks::stream_to_vector::make(size, t1.nr_samples);
+			vec_c = gr::blocks::vector_sink_c::make(t1.nr_samples);
+
+			top->connect(endpoint, 0, head, 0);
+			top->connect(head, 0, s2v, 0);
+			top->connect(s2v, 0, vec_c, 0);
+			testOutputs_c.push_back(vec_c);
+		}
 	}	
 }
 
@@ -117,7 +132,9 @@ void TST_GRBlocks::test1() {
 	GRSignalSrc *sin1;
 	GRScaleOffsetProc *scale_offset;
 
-	ch1 = top.addSignalPath("iio1");
+	ch1 = new GRSignalPath("iio1", &top);
+	top.registerSignalPath(ch1);
+
 	sin1 = new GRSignalSrc(ch1);
 	scale_offset = new GRScaleOffsetProc(ch1);
 	sin1->setWaveform(gr::analog::GR_CONST_WAVE);
@@ -187,10 +204,11 @@ void TST_GRBlocks::test2() {
 	GRSignalSrc *sin1;
 	GRScaleOffsetProc *scale_offset;
 
-	ch1 = new GRSignalPath("iio1",&top);//top.addSignalPath("iio1");
-	sin1 = new GRSignalSrc(ch1);
+	ch1 = new GRSignalPath("iio1",&top);
+	sin1 = new GRSignalSrc(ch1); // do not register this one
 
-	ch2 = top.addSignalPath("iio2");
+	ch2 = new GRSignalPath("iio2", &top);
+	top.registerSignalPath(ch2);
 	scale_offset = new GRScaleOffsetProc(ch2);
 
 	sin1->setWaveform(gr::analog::GR_CONST_WAVE);
@@ -237,9 +255,12 @@ void TST_GRBlocks::test3() {
 	GRScaleOffsetProc *scale_offset_1;
 	GRScaleOffsetProc *scale_offset_2;
 
-	ch1 = top.addSignalPath("iio1");
-	ch2 = top.addSignalPath("iio2");
-	ch3 = top.addSignalPath("iio3");
+	ch1 = new GRSignalPath("iio1",&top);
+	ch2 = new GRSignalPath("iio2",&top);
+	ch3 = new GRSignalPath("iio3",&top);
+	top.registerSignalPath(ch1);
+	top.registerSignalPath(ch2);
+	top.registerSignalPath(ch3);
 
 	sin1 = new GRSignalSrc(ch1);
 	sin2 = new GRSignalSrc(ch2);
@@ -282,7 +303,7 @@ void TST_GRBlocks::test3() {
 		top.getGrBlock()->run();
 
 //		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
-		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),    // where is sig_source_0? // leaked from prev testcase ..
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
 				 QString("multiply_const_ff0:0->add_const_ff0:0\n"
 						 "sig_source0:0->multiply_const_ff0:0\n"
 						 "multiply_const_ff1:0->add_const_ff1:0\n"
@@ -409,9 +430,14 @@ void TST_GRBlocks::test4() {
 	GRScaleOffsetProc *scale_offset_1;
 	GRScaleOffsetProc *scale_offset_2;
 
-	ch1 = top.addSignalPath("iio1");
-	ch2 = top.addSignalPath("iio2");
-	ch3 = top.addSignalPath("iio3");
+
+	ch1 = new GRSignalPath("iio1", &top);
+	top.registerSignalPath(ch1);
+	ch2 = new GRSignalPath("iio2", &top);
+	top.registerSignalPath(ch2);
+	ch3 = new GRSignalPath("iio3", &top);
+	top.registerSignalPath(ch3);
+
 
 	sin1 = new GRSignalSrc(ch1);
 	sin2 = new GRSignalSrc(ch2);
@@ -455,7 +481,7 @@ void TST_GRBlocks::test4() {
 		top.getGrBlock()->wait(); // for testing purposes
 
 		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
-		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),    // where is sig_source_0? // leaked from prev testcase ..
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
 			 QString("multiply_const_ff0:0->add_const_ff0:0\n"
 				 "sig_source0:0->multiply_const_ff0:0\n"
 				 "multiply_const_ff1:0->add_const_ff1:0\n"
@@ -535,7 +561,7 @@ void TST_GRBlocks::test4() {
 		top.getGrBlock()->wait(); // for testing purposes
 
 		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
-		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),    // where is sig_source_0? // leaked from prev testcase ..
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
 			 QString("multiply_const_ff0:0->add_const_ff0:0\n"
 				 "sig_source0:0->multiply_const_ff0:0\n"
 				 "multiply_const_ff1:0->add_const_ff1:0\n"
@@ -572,11 +598,154 @@ void TST_GRBlocks::test4() {
 }
 
 void TST_GRBlocks::test5() {
-	// test iio-source
-	// create iio-source (one channel)
-	// create iio-source (two channel)
-	// create iio-source (two-channel inverted)
-	// create iio-source (complex)
+
+	qInfo() << "This testcase verifies iio-source";
+	GRTopBlock top("aa", this);
+	GRSignalPath *ch1,*ch2;
+	GRSignalPath *ch3;
+	GRIIOFloatChannelSrc *fch1;
+	GRIIOFloatChannelSrc *fch2;
+	GRIIOComplexChannelSrc *cch1;
+	GRIIODeviceSource *dev;
+	GRScaleOffsetProc *scale_offset_1;
+	GRScaleOffsetProc *scale_offset_2;
+
+	ch1 = new GRSignalPath("iio1", &top);
+	top.registerSignalPath(ch1);
+	ch2 = new GRSignalPath("iio2", &top);
+	top.registerSignalPath(ch2);
+	ch3 = new GRSignalPath("complex", &top);
+
+
+	iio_context* ctx = iio_create_context_from_uri("ip:192.168.2.1");
+	if(!ctx) {
+		QSKIP("No context. Skipping");
+	}
+
+	dev = new GRIIODeviceSource(ctx,"cf-ad9361-lpc","ad9361-phy",0x400,&top);
+	if(!dev) {
+		QSKIP("No pluto. Skipping");
+	}
+
+	top.registerIIODeviceSource(dev);
+
+	fch1 = new GRIIOFloatChannelSrc(dev,"voltage0", ch1);
+	fch2 = new GRIIOFloatChannelSrc(dev,"voltage1", ch2);
+	cch1 = new GRIIOComplexChannelSrc(dev,"voltage0","voltage1",ch3);
+
+	ch1->append(fch1);
+	ch2->append(fch2);
+	ch3->append(cch1);
+
+	connect(&top,SIGNAL(builtSignalPaths()), this, SLOT(connectVectorSinks()));
+	top.build();
+	top.start();
+
+
+	{ 	// create iio-source (two channel)
+
+		top.getGrBlock()->wait(); // for testing purposes
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+				 QString("device_source0:0->short_to_float0:0\n"
+						 "device_source0:1->short_to_float1:0\n"
+						 "short_to_float0:0->head0:0\n"
+						 "head0:0->stream_to_vector0:0\n"
+						 "stream_to_vector0:0->vector_sink0:0\n"
+						 "short_to_float1:0->head1:0\n"
+						 "head1:0->stream_to_vector1:0\n"
+						 "stream_to_vector1:0->vector_sink1:0\n"));
+
+		std::vector<std::string> expectedChannel;
+		expectedChannel.push_back("voltage0");
+		expectedChannel.push_back("voltage1");
+		QCOMPARE(expectedChannel,dev->channelNames());
+		qDebug()<<testOutputs[0]->data();
+	}
+	ch1->setEnabled(false);
+
+	{	// create iio-source (one channel)
+
+		top.getGrBlock()->wait(); // for testing purposes
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+				 QString("device_source0:0->short_to_float0:0\n"
+						 "short_to_float0:0->head0:0\n"
+						 "head0:0->stream_to_vector0:0\n"
+						 "stream_to_vector0:0->vector_sink0:0\n"
+						 ));
+		std::vector<std::string> expectedChannel;
+		expectedChannel.push_back("voltage1");
+		QCOMPARE(expectedChannel,dev->channelNames());
+
+		qDebug()<<testOutputs[0]->data();
+	}
+	top.stop();
+	top.teardown();
+	ch1->setEnabled(true);
+	ch3->setEnabled(false);
+
+	top.unregisterSignalPath(ch1);
+	top.unregisterSignalPath(ch2);
+	top.registerSignalPath(ch2);
+	top.registerSignalPath(ch1);
+	top.registerSignalPath(ch3);
+
+	top.build();
+	top.start();
+
+	{ 	// create iio-source (two channel - inverted)
+
+		top.getGrBlock()->wait(); // for testing purposes
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+				 QString("device_source0:1->short_to_float0:0\n"
+						 "device_source0:0->short_to_float1:0\n" /* inversion occurs here */
+						 "short_to_float0:0->head0:0\n"
+						 "head0:0->stream_to_vector0:0\n"
+						 "stream_to_vector0:0->vector_sink0:0\n"
+						 "short_to_float1:0->head1:0\n"
+						 "head1:0->stream_to_vector1:0\n"
+						 "stream_to_vector1:0->vector_sink1:0\n"));
+
+		std::vector<std::string> expectedChannel;
+		expectedChannel.push_back("voltage0");
+		expectedChannel.push_back("voltage1");
+		QCOMPARE(expectedChannel,dev->channelNames());
+		qDebug()<<testOutputs[0]->data();
+	}
+
+	top.stop();
+	top.teardown();
+	ch1->setEnabled(false);
+	ch3->setEnabled(true);
+
+	top.build();
+	top.start();
+
+	{ 	// create iio-source (one channel + complex)
+
+		top.getGrBlock()->wait(); // for testing purposes
+		qDebug()<<QString::fromStdString(top.getGrBlock()->edge_list());
+		QCOMPARE(QString::fromStdString(top.getGrBlock()->edge_list()),
+				 QString("short_to_float1:0->float_to_complex0:0\n"
+						 "short_to_float2:0->float_to_complex0:1\n"
+						 "device_source0:1->short_to_float0:0\n"
+						 "device_source0:0->short_to_float1:0\n"
+						 "device_source0:1->short_to_float2:0\n"
+						 "short_to_float0:0->head0:0\n"
+						 "head0:0->stream_to_vector0:0\n"
+						 "stream_to_vector0:0->vector_sink0:0\n"
+						 "float_to_complex0:0->head1:0\n"
+						 "head1:0->stream_to_vector1:0\n"
+						 "stream_to_vector1:0->vector_sink1:0\n"));
+
+		std::vector<std::string> expectedChannel;
+		expectedChannel.push_back("voltage0");
+		expectedChannel.push_back("voltage1");
+		QCOMPARE(expectedChannel,dev->channelNames());
+		qDebug()<<testOutputs[0]->data();
+	}
 }
 
 
@@ -591,7 +760,6 @@ void TST_GRBlocks::test5() {
 // - head
 
 
-// add iio-test
 // add math-test
 // add audio-test
 // add file-test

@@ -1,6 +1,8 @@
 #include "griiocomplexchannelsrc.h"
 #include "griiodevicesource.h"
 #include "grtopblock.h"
+#include <QDebug>
+#include "grlog.h"
 
 using namespace scopy::grutil;
 GRIIOComplexChannelSrc::GRIIOComplexChannelSrc(GRIIODeviceSource *dev, QString channelNameI, QString channelNameQ, QObject *parent) :
@@ -10,6 +12,7 @@ GRIIOComplexChannelSrc::GRIIOComplexChannelSrc(GRIIODeviceSource *dev, QString c
 
 void GRIIOComplexChannelSrc::build_blks(GRTopBlock *top)
 {
+	qDebug(SCOPY_GR_UTIL)<<"Building GRIIOComplexChannelSrc";
 	dev->addChannel(this);
 	s2f[0] = gr::blocks::short_to_float::make();
 	s2f[1] = gr::blocks::short_to_float::make();

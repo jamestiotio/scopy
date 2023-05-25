@@ -10,6 +10,7 @@ class SCOPY_GR_UTIL_EXPORT GRSignalSrc : public GRProxyBlock {
 	Q_OBJECT
 public:
 	GRSignalSrc(QObject *parent = nullptr);
+	~GRSignalSrc();
 	void setWaveform(gr::analog::gr_waveform_t waveform);
 	void setSamplingFreq(double sr);
 	void setFreq(double f);

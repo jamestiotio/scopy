@@ -1,7 +1,7 @@
 #include "grtopblock.h"
-#include <QLoggingCategory>
+#include "grlog.h"
 
-Q_LOGGING_CATEGORY(TOPBLOCK, "GRTopBlock")
+Q_LOGGING_CATEGORY(SCOPY_GR_UTIL, "GRManager")
 
 using namespace scopy::grutil;
 GRTopBlock::GRTopBlock(QString name, QObject *parent) : running(false), built(false)
@@ -14,11 +14,16 @@ GRTopBlock::~GRTopBlock()
 
 }
 
-GRSignalPath *GRTopBlock::addSignalPath(QString name) {
-	GRSignalPath* sig = new GRSignalPath(name, this);
+void GRTopBlock::registerSignalPath(GRSignalPath* sig) {
 	m_signalPaths.append(sig);
 	QObject::connect(sig,SIGNAL(requestRebuild()),this,SLOT(rebuild()));
-	return sig;
+	rebuild();
+}
+
+void GRTopBlock::unregisterSignalPath(GRSignalPath* sig) {
+	m_signalPaths.removeAll(sig);
+	QObject::disconnect(sig,SIGNAL(requestRebuild()),this,SLOT(rebuild()));
+	rebuild();
 }
 
 void GRTopBlock::registerIIODeviceSource(GRIIODeviceSource *dev)
@@ -26,11 +31,13 @@ void GRTopBlock::registerIIODeviceSource(GRIIODeviceSource *dev)
 	if(m_iioDeviceSources.contains(dev))
 		return;
 	m_iioDeviceSources.append(dev);
+	rebuild();
 }
 
 void GRTopBlock::unregisterIIODeviceSource(GRIIODeviceSource *dev)
 {
 	m_iioDeviceSources.removeAll(dev);
+	rebuild();
 }
 
 void GRTopBlock::build() {
@@ -103,7 +110,7 @@ void GRTopBlock::rebuild() {
 
 void GRTopBlock::connect(gr::basic_block_sptr src, int srcPort, gr::basic_block_sptr dst, int dstPort)
 {
-	qDebug(TOPBLOCK) << "Connecting " << QString::fromStdString(src->symbol_name()) << ":" << srcPort
+	qDebug(SCOPY_GR_UTIL) << "Connecting " << QString::fromStdString(src->symbol_name()) << ":" << srcPort
 					 << "to" << QString::fromStdString(dst->symbol_name()) << ":" << dstPort;
 	top->connect(src,srcPort,dst,dstPort);
 }

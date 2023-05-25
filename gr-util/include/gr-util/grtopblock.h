@@ -14,7 +14,8 @@ class SCOPY_GR_UTIL_EXPORT GRTopBlock : public QObject
 public:
 	GRTopBlock(QString name, QObject *parent = nullptr);
 	~GRTopBlock();
-	GRSignalPath* addSignalPath(QString name);	
+	void registerSignalPath(GRSignalPath* path);
+	void unregisterSignalPath(GRSignalPath* path);
 	QList<GRSignalPath*> signalPaths() { return m_signalPaths;}
 
 	void registerIIODeviceSource(GRIIODeviceSource *);

@@ -1,5 +1,6 @@
 #include "grscaleoffsetproc.h"
 #include "grtopblock.h"
+#include "grlog.h"
 
 using namespace scopy::grutil;
 GRScaleOffsetProc::GRScaleOffsetProc(QObject *parent) : GRProxyBlock(parent) {}
@@ -17,6 +18,7 @@ void GRScaleOffsetProc::setOffset(double off) {
 }
 
 void GRScaleOffsetProc::build_blks(GRTopBlock *top) {
+	qDebug(SCOPY_GR_UTIL)<<"Building GRScaleOffsetProc";
 	mul = gr::blocks::multiply_const_ff::make(m_scale);
 	add = gr::blocks::add_const_ff::make(m_offset);
 	top->connect(mul,0,add,0);

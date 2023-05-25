@@ -34,7 +34,7 @@ protected:
 	QList<gr::basic_block_sptr> start_blk; // QList of (?)
 	gr::basic_block_sptr end_blk;
 	bool m_enabled;
-	bool m_built;
+//	bool m_built;
 };
 
 }

@@ -1,5 +1,6 @@
 #include "grsignalpath.h"
 #include "grtopblock.h"
+#include "grlog.h"
 
 using namespace scopy::grutil;
 
@@ -44,6 +45,7 @@ gr::basic_block_sptr GRSignalPath::getGrEndPoint()
 }
 
 void GRSignalPath::connect_blk(GRTopBlock *top, GRProxyBlock *src) {
+	qDebug(SCOPY_GR_UTIL)<<"Start connecting GRSignalPath";
 	GRProxyBlock* prevBlk = src;
 	for(GRProxyBlock* blk : qAsConst(list)) {
 		if(blk->enabled() && !blk->built()
@@ -54,6 +56,7 @@ void GRSignalPath::connect_blk(GRTopBlock *top, GRProxyBlock *src) {
 			prevBlk = blk;
 		}
 	}
+	qDebug(SCOPY_GR_UTIL)<<"End connecting GRSignalPath";
 }
 
 void GRSignalPath::disconnect_blk(GRTopBlock *top) {
@@ -64,7 +67,6 @@ void GRSignalPath::disconnect_blk(GRTopBlock *top) {
 		}
 	}
 }
-
 
 QString GRSignalPath::name() const
 {
