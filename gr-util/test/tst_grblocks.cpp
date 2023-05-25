@@ -2,13 +2,23 @@
 #include "gr-util/grtopblock.h"
 #include "gr-util/grsignalpath.h"
 #include "gr-util/grproxyblock.h"
+#include "gnuradio/analog/sig_source.h"
 #include <gnuradio/blocks/vector_sink.h>
 #include <gnuradio/blocks/head.h>
 #include <gnuradio/blocks/stream_to_vector.h>
 #include <QVector>
 #include <QSignalSpy>
 
-using namespace scopy;
+#include <gr-util/grproxyblock.h>
+#include <gr-util/griiocomplexchannelsrc.h>
+#include <gr-util/griiodevicesource.h>
+#include <gr-util/griiofloatchannelsrc.h>
+#include <gr-util/grscaleoffsetproc.h>
+#include <gr-util/grsignalpath.h>
+#include <gr-util/grsignalsrc.h>
+#include <gr-util/grtopblock.h>
+
+using namespace scopy::grutil;
 
 class TST_GRBlocks : public QObject
 {
@@ -391,7 +401,8 @@ void TST_GRBlocks::test3() {
 
 void TST_GRBlocks::test4() {
 
-	qInfo() << "This testcase verifies if multiple signalpaths work for the same topblock";
+	qInfo() << "This testcase verifies signal emission on building/teardown and how it can be leveraged to build "
+		   "sinks on demand";
 	GRTopBlock top("aa", this);
 	GRSignalPath *ch1,*ch2,*ch3;
 	GRSignalSrc *sin1, *sin2;
@@ -561,18 +572,30 @@ void TST_GRBlocks::test4() {
 }
 
 void TST_GRBlocks::test5() {
+	// test iio-source
+	// create iio-source (one channel)
+	// create iio-source (two channel)
+	// create iio-source (two-channel inverted)
+	// create iio-source (complex)
 }
 
 
 
 
 // tests:
-// test new GRTopBlock - // add run/reconfigure/connect sinks/run - to a top block manager (?) - top block management (?)
 // figure out lifecycle for build/connect/disconnect/teardown - just getEndPoint - and build if required - all goes recursively (?) - QoL change - not necessary rn
 
-// add more blocks (?) - dc blocker, soft trigger, head, audio source, file source, iio source (are all sources multiplexed ?
-// sources should create placeholders and before finishing building should create actual blocks)
-// test all blocks
+// add more blocks (?)
+// - dc blocker
+// - soft trigger
+// - head
+
+
+// add iio-test
+// add math-test
+// add audio-test
+// add file-test
+
 
 QTEST_MAIN(TST_GRBlocks)
 //int main() {

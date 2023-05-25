@@ -4,7 +4,7 @@
 #include "grproxyblock.h"
 #include "scopy-gr-util_export.h"
 
-namespace scopy {
+namespace scopy::grutil {
 class GRTopBlock;
 class GRProxyBlock;
 
@@ -15,7 +15,7 @@ public:
 	void append(GRProxyBlock* p);
 	void build_blks();
 	void destroy_blks();
-	virtual gr::basic_block_sptr getGrStartPoint();
+	virtual QList<gr::basic_block_sptr> getGrStartPoint();
 	virtual gr::basic_block_sptr getGrEndPoint();
 	virtual void connect_blk(GRTopBlock *top, GRProxyBlock *src);
 	virtual void disconnect_blk(GRTopBlock *top);

@@ -3,7 +3,7 @@
 
 Q_LOGGING_CATEGORY(TOPBLOCK, "GRTopBlock")
 
-using namespace scopy;
+using namespace scopy::grutil;
 GRTopBlock::GRTopBlock(QString name, QObject *parent) : running(false), built(false)
 {
 
@@ -21,13 +21,29 @@ GRSignalPath *GRTopBlock::addSignalPath(QString name) {
 	return sig;
 }
 
+void GRTopBlock::registerIIODeviceSource(GRIIODeviceSource *dev)
+{
+	if(m_iioDeviceSources.contains(dev))
+		return;
+	m_iioDeviceSources.append(dev);
+}
+
+void GRTopBlock::unregisterIIODeviceSource(GRIIODeviceSource *dev)
+{
+	m_iioDeviceSources.removeAll(dev);
+}
+
 void GRTopBlock::build() {
 	top = gr::make_top_block(m_name.toStdString());
 
-	for(GRSignalPath* sig : m_signalPaths) {
+	for (GRSignalPath* sig : qAsConst(m_signalPaths)) {
 		if(sig->enabled() ) {
 			sig->connect_blk(this, nullptr);
 		}
+	}
+	for (GRIIODeviceSource* dev : qAsConst(m_iioDeviceSources)) {
+		dev->build_blks(this);
+		dev->connect_blk(this, nullptr);
 	}
 	Q_EMIT builtSignalPaths();
 	built = true;
@@ -35,9 +51,16 @@ void GRTopBlock::build() {
 
 void GRTopBlock::teardown() {
 	built = false;
-	for(GRSignalPath* sig : m_signalPaths) {
+
+	for (GRIIODeviceSource* dev : qAsConst(m_iioDeviceSources)) {
+		dev->disconnect_blk(this);
+		dev->destroy_blks(this);
+	}
+
+	for(GRSignalPath* sig : qAsConst(m_signalPaths)) {
 		sig->disconnect_blk(this);
 	}
+
 	top->disconnect_all();
 	Q_EMIT teardownSignalPaths();
 }

@@ -1,7 +1,7 @@
 #include "grsignalpath.h"
 #include "grtopblock.h"
 
-using namespace scopy;
+using namespace scopy::grutil;
 
 GRSignalPath::GRSignalPath(QString name, QObject *parent) : GRProxyBlock(parent), m_name(name) {}
 
@@ -21,7 +21,7 @@ void GRSignalPath::destroy_blks() {
 
 }
 
-gr::basic_block_sptr GRSignalPath::getGrStartPoint()
+QList<gr::basic_block_sptr> GRSignalPath::getGrStartPoint()
 {
 	for(int i = 0;i<list.count();i++) {
 		auto blk = list[i];
@@ -29,7 +29,7 @@ gr::basic_block_sptr GRSignalPath::getGrStartPoint()
 			return blk->getGrStartPoint();
 		}
 	}
-	return nullptr;
+	return QList<gr::basic_block_sptr>();
 }
 
 gr::basic_block_sptr GRSignalPath::getGrEndPoint()

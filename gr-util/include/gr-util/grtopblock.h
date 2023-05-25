@@ -3,10 +3,11 @@
 
 #include <QObject>
 #include <gnuradio/top_block.h>
+#include "griiodevicesource.h"
 #include "grsignalpath.h"
 #include "scopy-gr-util_export.h"
 
-namespace scopy {
+namespace scopy::grutil {
 class SCOPY_GR_UTIL_EXPORT GRTopBlock : public QObject
 {
 	Q_OBJECT
@@ -15,6 +16,9 @@ public:
 	~GRTopBlock();
 	GRSignalPath* addSignalPath(QString name);	
 	QList<GRSignalPath*> signalPaths() { return m_signalPaths;}
+
+	void registerIIODeviceSource(GRIIODeviceSource *);
+	void unregisterIIODeviceSource(GRIIODeviceSource *);
 
 	void connect(gr::basic_block_sptr src, int srcPort, gr::basic_block_sptr dst, int dstPort);
 
@@ -38,8 +42,8 @@ private:
 	bool running;
 	bool built;
 	QList<GRSignalPath*> m_signalPaths;
+	QList<GRIIODeviceSource*> m_iioDeviceSources;
 };
-
 
 }
 #endif // GRTOPBLOCK_H
