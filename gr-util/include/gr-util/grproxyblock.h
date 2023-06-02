@@ -24,7 +24,7 @@ public:
 	void setEnabled(bool v);
 	bool enabled();
 	bool built();
-	virtual QList<gr::basic_block_sptr> getGrStartPoint(); // QList of (?)
+	virtual QList<gr::basic_block_sptr> getGrStartPoint();
 	virtual gr::basic_block_sptr getGrEndPoint();
 
 Q_SIGNALS:

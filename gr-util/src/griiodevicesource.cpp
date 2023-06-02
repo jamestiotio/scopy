@@ -135,3 +135,8 @@ std::vector<std::string> GRIIODeviceSource::channelNames() const
 {
 	return m_channelNames;
 }
+
+QString GRIIODeviceSource::deviceName() const
+{
+	return m_deviceName;
+}

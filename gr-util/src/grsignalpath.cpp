@@ -72,3 +72,8 @@ QString GRSignalPath::name() const
 {
 	return m_name;
 }
+
+QList<GRProxyBlock *> GRSignalPath::path()
+{
+	return list;
+}

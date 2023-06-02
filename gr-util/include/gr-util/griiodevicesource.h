@@ -8,7 +8,12 @@
 
 namespace scopy::grutil {
 
-typedef GRProxyBlock GRIIOChannel;
+class GRIIODeviceSource;
+typedef GRProxyBlock GRIIOChannel; // TODO: create interface here
+//class SCOPY_GR_UTIL_EXPORT GRIIOChannel : public GRProxyBlock {
+//	GRIIODeviceSource* getDeviceSrc();
+//	QString getChannelName();
+//};
 
 class SCOPY_GR_UTIL_EXPORT GRIIODeviceSource : public GRProxyBlock { // is this a proxy block
 public:
@@ -26,6 +31,8 @@ public:
 	void setBuffersize(unsigned int newBuffersize);
 
 	std::vector<std::string> channelNames() const;
+
+	QString deviceName() const;
 
 protected:
 	QList<GRIIOChannel*> m_list;

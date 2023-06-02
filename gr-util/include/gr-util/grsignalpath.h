@@ -20,6 +20,7 @@ public:
 	virtual void connect_blk(GRTopBlock *top, GRProxyBlock *src);
 	virtual void disconnect_blk(GRTopBlock *top);
 	QString name() const;
+	QList<GRProxyBlock*> path();
 
 protected:
 	QList<GRProxyBlock*> list;
