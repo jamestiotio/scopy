@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
 	SetScopyQDebugMessagePattern();
 	QLoggingCategory::setFilterRules(""
 					 "*.debug=false\n"
-					 "ToolStack.debug=true\n"
-					 "ToolManager.debug=true\n"
 					 "DeviceManager.debug=true\n"
 					 "Device.debug=true\n"
 					 "TestPlugin.debug=true\n"
@@ -46,7 +44,7 @@ int main(int argc, char *argv[])
 					 "swiotConfig.debug=true\n"
 					 "CyclicalTask.debug=false\n"
 					 "SWIOTPlugin.debug=true\n"
-					 "AD74413R.debug=true\n"
+					 "ADCPlugin.debug=true\n"
 					 );
 
 	QCoreApplication::setOrganizationName("ADI");
