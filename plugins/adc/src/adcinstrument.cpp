@@ -3,6 +3,7 @@
 #include <gui/tool_view_builder.hpp>
 
 using namespace scopy;
+using namespace scopy::grutil;
 AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent)
 {
 	scopy::gui::ToolViewRecipe recipe;
@@ -19,16 +20,63 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	m_monitorChannelManager->setToolStatus(" Channels");
 
 
+	GRTimePlotAddon* plotAddon = dynamic_cast<GRTimePlotAddon*>(proxy->getPlotAddon());
 
 	auto m_toolView = scopy::gui::ToolViewBuilder(recipe, m_monitorChannelManager, this).build();
-	for(auto c : proxy->getChannelAddons()) {
-		auto ch = m_toolView->buildNewChannel(m_monitorChannelManager,new gui::GenericMenu(),false,-1,true,false,QColor("red"),"LongName - Test1",c->getName());
-		ch->setMenuButtonVisibility(false);
+
+	for(auto d: proxy->getDeviceAddons()) {
+		GRDeviceAddon *dev = dynamic_cast<GRDeviceAddon*>(d);
+		if(!dev)
+			return;
+
+
+		std::vector<ChannelWidget*> chGroup;
+		auto dev_ch = m_toolView->buildNewChannel(m_monitorChannelManager,
+						       new gui::GenericMenu(),
+						       false,
+						       -1,
+						       false,
+						       false,
+						       QColor("black"),
+						       "LongName - Test1",
+						       d->getName());
+		chGroup.push_back(dev_ch);
+
+		for(auto c: dev->getRegisteredChannels()) {
+			auto ch = m_toolView->buildNewChannel(m_monitorChannelManager,
+							      new gui::GenericMenu(),
+							      false,
+							      -1,
+							      false,
+							      false,
+							      QColor("black"),
+							      "LongName - Test1",
+							      c->getName());
+			plotAddon->onChannelAdded(c);
+			auto plot = plotAddon->plot();
+			auto curveId = plot->getAnalogChannels() - 1;
+			auto color = plot->getLineColor(curveId);
+			ch->setColor(color);
+			plot->Curve(curveId)->setAxes(
+			    QwtAxisId(QwtAxis::XBottom, 0),
+			    QwtAxisId(QwtAxis::YLeft, curveId));
+			plot->DetachCurve(curveId);
+
+			ch->setMenuButtonVisibility(false);
+			chGroup.push_back(ch);
+		}
+
+		m_toolView->buildChannelGroup(m_monitorChannelManager,
+					      chGroup[0],
+					      chGroup
+					      );
+
+
 
 	}
 
 
-	m_toolView->addDockableTabbedWidget(proxy->getPlotAddon()->getWidget(),"");
+	m_toolView->addFixedCentralWidget(proxy->getPlotAddon()->getWidget());
 	m_toolView->setGeneralSettingsMenu(proxy->getPlotSettings()->getWidget(),false);
 
 
