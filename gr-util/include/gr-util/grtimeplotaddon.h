@@ -4,14 +4,17 @@
 #include "scopy-gr-util_export.h"
 #include "tooladdon.h"
 #include <gui/oscilloscope_plot.hpp>
-
 #include <QGridLayout>
+#include <gr-gui/scope_sink_f.h>
 
 namespace scopy::grutil {
+using namespace scopy;
+class GRTopBlock;
+
 class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon {
 	Q_OBJECT
 public:
-	GRTimePlotAddon(QString name, QObject *parent = nullptr);
+	GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent = nullptr);
 	~GRTimePlotAddon();
 
 	QString getName() override;
@@ -29,10 +32,16 @@ public Q_SLOTS:
 	void onChannelRemoved(ToolAddon*) override;
 
 
+private slots:
+	void connectSignalPaths();
+	void tearDownSignalPaths();
+	void onNewData();
 private:
 	QString name;
 	QWidget *widget;
 	CapturePlot *m_plot;
+	GRTopBlock *m_top;
+	QList<scope_sink_f::sptr> sinks;
 };
 }
 

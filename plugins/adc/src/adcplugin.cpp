@@ -111,7 +111,7 @@ PlotProxy* ADCPlugin::createRecipe(iio_context *ctx) {
 	QString plotRecipePrefix = "time_";
 	recipe->setPrefix(plotRecipePrefix);
 
-	GRTimePlotAddon *p = new GRTimePlotAddon(plotRecipePrefix,this);
+	GRTimePlotAddon *p = new GRTimePlotAddon(plotRecipePrefix, top,this);
 	GRTimePlotAddonSettings *s = new GRTimePlotAddonSettings(p,this);
 	recipe->setPlotAddon(p,s);
 
@@ -125,10 +125,10 @@ PlotProxy* ADCPlugin::createRecipe(iio_context *ctx) {
 
 		for(const QString &ch : devChannelMap.value(iio_dev,{})) {
 			qDebug()<<ch;
-			GRSignalPath *sig = new GRSignalPath(plotRecipePrefix + ch, top);
+			GRSignalPath *sig = new GRSignalPath(plotRecipePrefix + iio_dev + ch, top);
 			sig->append(new GRIIOFloatChannelSrc(gr_dev,ch,sig));
 			sig->append(new GRScaleOffsetProc(sig));
-			sig->setEnabled(false);
+			sig->setEnabled(true);
 			top->registerSignalPath(sig);			
 
 			GRTimeChannelAddon *t = new GRTimeChannelAddon(sig, p, this);

@@ -4,7 +4,7 @@
 
 using namespace scopy;
 using namespace scopy::grutil;
-AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent)
+AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent), proxy(proxy)
 {
 	scopy::gui::ToolViewRecipe recipe;
 	recipe.helpBtnUrl = "";
@@ -60,7 +60,8 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 			plot->Curve(curveId)->setAxes(
 			    QwtAxisId(QwtAxis::XBottom, 0),
 			    QwtAxisId(QwtAxis::YLeft, curveId));
-			plot->DetachCurve(curveId);
+//			plot->DetachCurve(curveId);
+			plot->addZoomer(curveId);
 
 			ch->setMenuButtonVisibility(false);
 			chGroup.push_back(ch);
@@ -78,10 +79,40 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 
 	m_toolView->addFixedCentralWidget(proxy->getPlotAddon()->getWidget());
 	m_toolView->setGeneralSettingsMenu(proxy->getPlotSettings()->getWidget(),false);
+	connect(m_toolView->getRunBtn(), SIGNAL(toggled(bool)), this, SLOT(run(bool)));
 
 
 //	gui::GenericMenu *settingsMenu = createSettingsMenu("General settings", new QColor("Red"));
 //	m_toolView->setGeneralSettingsMenu(settingsMenu, true);
 
 }
+
+void AdcInstrument::run(bool b) {
+	qInfo()<<b;
+
+	for(auto ch : proxy->getChannelAddons()) {
+		if(b)
+			ch->onStart();
+		else
+			ch->onStop();
+	}
+	for(auto dev : proxy->getDeviceAddons()) {
+		if(b)
+			dev->onStart();
+		else
+			dev->onStop();
+	}
+
+	if(b)
+		proxy->getPlotAddon()->onStart();
+	else
+		proxy->getPlotAddon()->onStop();
+
+
+
+}
+
+
+
+
 
