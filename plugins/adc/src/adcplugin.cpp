@@ -127,8 +127,11 @@ PlotProxy* ADCPlugin::createRecipe(iio_context *ctx) {
 			qDebug()<<ch;
 			GRSignalPath *sig = new GRSignalPath(plotRecipePrefix + iio_dev + ch, top);
 			sig->append(new GRIIOFloatChannelSrc(gr_dev,ch,sig));
-			sig->append(new GRScaleOffsetProc(sig));
+			auto scOff = new GRScaleOffsetProc(sig);
+			sig->append(scOff);
 			sig->setEnabled(true);
+			scOff->setOffset(0);
+			scOff->setScale(1);
 			top->registerSignalPath(sig);			
 
 			GRTimeChannelAddon *t = new GRTimeChannelAddon(sig, p, this);
