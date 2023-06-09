@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 					 "CyclicalTask.debug=false\n"
 					 "SWIOTPlugin.debug=true\n"
 					 "ADCPlugin.debug=true\n"
+					 "GRManager.debug=true\n"
 					 );
 
 	QCoreApplication::setOrganizationName("ADI");

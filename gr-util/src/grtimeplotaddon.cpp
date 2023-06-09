@@ -103,7 +103,7 @@ void GRTimePlotAddon::connectSignalPaths() {
 
 		qInfo()<<"created scope_sink_f with name" << sigpath->name();
 		m_top->connect(sigpath->getGrEndPoint(), 0, sink, 0);
-		m_plot->setAllYAxis(-20000,20000);
+		m_plot->setAllYAxis(-1000000,1000000);
 	}
 }
 
@@ -120,10 +120,13 @@ void GRTimePlotAddon::onNewData() {
 	for(int i=0;i<m_plot->Curve(0)->data()->size();i++) {
 		sum0 += m_plot->Curve(0)->data()->sample(i).y();
 	}
-	for(int i=0;i<m_plot->Curve(1)->data()->size();i++) {
-		sum1 += m_plot->Curve(1)->data()->sample(i).y();
-	}
+//	for(int i=0;i<m_plot->Curve(1)->data()->size();i++) {
+//		sum1 += m_plot->Curve(1)->data()->sample(i).y();
+//	}
 
 
-	qInfo()<<"new dataa! avgs - " << sum0/m_plot->Curve(0)->data()->size() << sum1 / m_plot->Curve(1)->data()->size();
+	qInfo()<<"new dataa! avgs - "
+		<< sum0/m_plot->Curve(0)->data()->size()
+//		<< sum1 / m_plot->Curve(1)->data()->size()
+	    ;
 }

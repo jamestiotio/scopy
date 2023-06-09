@@ -4,6 +4,9 @@
 #include "gnuradio/blocks/short_to_float.h"
 #include "gnuradio/blocks/copy.h"
 
+#include "gnuradio/blocks/char_to_float.h"
+
+
 using namespace scopy::grutil;
 GRIIOFloatChannelSrc::GRIIOFloatChannelSrc(GRIIODeviceSource *dev, QString channelName, QObject *parent) :
 	GRIIOChannel(channelName, dev, parent)
@@ -23,8 +26,9 @@ void GRIIOFloatChannelSrc::build_blks(GRTopBlock *top)
 	case 32:
 		x2f = gr::blocks::int_to_float::make();
 		break;
-	default:
-		x2f = gr::blocks::copy::make(sizeof(float));
+	default:		
+		qInfo(SCOPY_GR_UTIL)<<"creating copy block of size " << fmt->length/8;
+		x2f = gr::blocks::copy::make(fmt->length/8);
 		break;
 	}
 
