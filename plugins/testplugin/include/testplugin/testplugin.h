@@ -44,6 +44,7 @@ public Q_SLOTS:
 private:
 	QString m_initText;
 	QWidget *tool;
+	QWidget *tool2;
 	QLineEdit *edit;
 	int renameCnt;
 	ApiObject* m_pluginApi;
@@ -56,6 +57,7 @@ private:
 	QPushButton *btn;
 	QPushButton *btn2;
 	QPushButton *btn3;
+	QPushButton *btn4;
 };
 
 class SCOPY_TESTPLUGIN_EXPORT TestPlugin_API : public ApiObject {

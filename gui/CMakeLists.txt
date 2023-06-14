@@ -56,7 +56,7 @@ set(PROJECT_SOURCES
         ${UI_LIST}
 )
 
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Xml Svg REQUIRED)
 option(SCOPY_ENABLE_GR_GUI "Build gnuradio addons for scopy-gui" ON)
 option(SCOPY_ENABLE_SIGROK_GUI "Build sigrok addons for scopy-gui" ON)
 if(SCOPY_ENABLE_GR_GUI)
@@ -87,6 +87,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Xml
+    Qt${QT_VERSION_MAJOR}::Svg
     ${QWT_LIBRARIES}
     scopy-common
 )

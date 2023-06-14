@@ -14,6 +14,10 @@
 #include <QDialog>
 #include "tutorialoverlay.h"
 #include <gui/utils.h>
+#include <gui/hoverwidget.h>
+
+#include "ui_cursors_settings.h"
+#include "testtool.h"
 
 Q_LOGGING_CATEGORY(CAT_TESTPLUGIN,"TestPlugin");
 using namespace scopy;
@@ -75,7 +79,7 @@ void TestPlugin::loadToolList()
 {
 	renameCnt = 0;
 	m_toolList.append(SCOPY_NEW_TOOLMENUENTRY("test1first","FirstPlugin",":/gui/icons/scopy-default/icons/tool_home.svg"));
-	m_toolList.append(SCOPY_NEW_TOOLMENUENTRY("test1second","Alexandra",":/gui/icons/scopy-default/icons/tool_io.svg"));
+	m_toolList.append(SCOPY_NEW_TOOLMENUENTRY("test1second","Second Plugin",":/gui/icons/scopy-default/icons/tool_io.svg"));
 }
 
 bool TestPlugin::loadExtraButtons()
@@ -147,6 +151,20 @@ bool TestPlugin::onConnect()
 	btn = new QPushButton("detach");
 	btn2 = new QPushButton("renameTool");
 	btn3 = new QPushButton("tutorial");
+	btn4 = new QPushButton("CursorButton");
+	btn4->setCheckable(true);
+
+	Ui::CursorsSettings* ui_curs = new Ui::CursorsSettings;
+	QWidget *cursorMenu = new QWidget(tool);
+	ui_curs->setupUi(cursorMenu);
+//	cursorMenu->setWindowModality(Qt::WindowModal);
+
+	HoverWidget* hover = new HoverWidget(cursorMenu, btn4, tool);
+	connect(btn4, &QPushButton::toggled, this, [=](bool b) {
+		hover->setVisible(b);
+		hover->raise();
+	});
+
 	connect(btn,&QPushButton::clicked,this,[=](){m_toolList[0]->setAttached(!m_toolList[0]->attached());});
 	connect(btn2,&QPushButton::clicked,this,[=](){m_toolList[0]->setName("TestPlugin"+QString::number(renameCnt++));});
 	connect(btn3,&QPushButton::clicked,this,[=](){startTutorial();});
@@ -159,7 +177,16 @@ bool TestPlugin::onConnect()
 	lay->addWidget(btn);
 	lay->addWidget(btn2);
 	lay->addWidget(btn3);
+	lay->addWidget(btn4);
+
 	m_toolList[0]->setTool(tool);
+
+	tool2 = new TestTool();
+
+
+	m_toolList[1]->setTool(tool2);
+	m_toolList[1]->setEnabled(true);
+	m_toolList[1]->setRunBtnVisible(true);
 
 	m_pluginApi = new TestPlugin_API(this);
 	m_pluginApi->setObjectName(m_name);
