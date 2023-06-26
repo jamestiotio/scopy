@@ -144,14 +144,16 @@ bool TestPlugin::onConnect()
 	m_toolList[0]->setRunBtnVisible(true);
 
 	tool = new QWidget();
+	m_toolList[0]->setTool(tool);
+
 	QVBoxLayout *lay = new QVBoxLayout(tool);
 	lbl = new QLabel("TestPlugin", tool);
 	pic = new QLabel("Picture",tool);
 	lbl2 = new QLabel("m_initText->"+m_initText,tool);
-	btn = new QPushButton("detach");
-	btn2 = new QPushButton("renameTool");
-	btn3 = new QPushButton("tutorial");
-	btn4 = new QPushButton("CursorButton");
+	btn = new QPushButton("detach",tool);
+	btn2 = new QPushButton("renameTool",tool);
+	btn3 = new QPushButton("tutorial",tool);
+	btn4 = new QPushButton("CursorButton",tool);
 	btn4->setCheckable(true);
 
 	Ui::CursorsSettings* ui_curs = new Ui::CursorsSettings;
@@ -160,6 +162,8 @@ bool TestPlugin::onConnect()
 //	cursorMenu->setWindowModality(Qt::WindowModal);
 
 	HoverWidget* hover = new HoverWidget(cursorMenu, btn4, tool);
+	hover->setAnchorPos(HoverPosition::HP_TOPLEFT);
+	hover->setContentPos(HoverPosition::HP_TOPRIGHT);
 	connect(btn4, &QPushButton::toggled, this, [=](bool b) {
 		hover->setVisible(b);
 		hover->raise();
@@ -178,8 +182,6 @@ bool TestPlugin::onConnect()
 	lay->addWidget(btn2);
 	lay->addWidget(btn3);
 	lay->addWidget(btn4);
-
-	m_toolList[0]->setTool(tool);
 
 	tool2 = new TestTool();
 

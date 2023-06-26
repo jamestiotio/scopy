@@ -1,5 +1,8 @@
 #include "hoverwidget.h"
 #include <QDebug>
+#include <QPaintEvent>
+#include <QStyleOption>
+#include <QPainter>
 
 using namespace scopy;
 
@@ -16,15 +19,18 @@ HoverWidget::HoverWidget(QWidget *content,
 	m_lay = new QHBoxLayout(m_container);
 	m_lay->setMargin(2);
 	m_container->setLayout(m_lay);
-	setStyleSheet("QWidget#container { padding: 5px solid black;background-color:#272727 }");
 
 	m_lay->addWidget(content);
-
 	m_container->resize(content->size());
 	moveToAnchor();
+
 	anchor->installEventFilter(this);
 	content->installEventFilter(this);
+	m_parent->installEventFilter(this);
+
 	hide();
+
+
 }
 
 HoverWidget::~HoverWidget()
@@ -39,11 +45,12 @@ bool HoverWidget::eventFilter(QObject *watched, QEvent *event)
 			resize(m_content->size());
 		}
 	}
-	if(watched == m_anchor) {
-		if(event->type() == QEvent::Move) {
+	if(watched == m_anchor || watched == m_parent ) {
+		if(event->type() == QEvent::Move || event->type() == QEvent::Resize) {
 			moveToAnchor();
 		}
 	}
+
 	return false;
 }
 
@@ -81,7 +88,15 @@ void HoverWidget::setContentPos(HoverPosition pos)
 
 void HoverWidget::moveToAnchor()
 {
-	QPoint mappedPoint = mapTo(this, m_anchor->pos() );
+//	qInfo()<<(mapFrom(m_parent,m_anchor->pos()));
+//	mapTo(m_parent,m_anchor->pos());
+
+	QPoint global = m_anchor->mapToGlobal(QPoint(0,0));
+	QPoint mappedPoint =  m_parent->mapFromGlobal(global);
+
+	qInfo()<<m_anchor->pos();
+	qInfo()<< global;
+	qInfo()<< mappedPoint;
 	QPoint anchorPosition = QPoint(0,0);
 	QPoint contentPosition = QPoint(0,0);
 	switch (m_anchorPos) {
@@ -151,8 +166,25 @@ void HoverWidget::moveToAnchor()
 		break;
 	}
 
+	qInfo()<<"mapped"<<mappedPoint<<"contentPosition"<<contentPosition<<
+		"anchorPosition"<<anchorPosition<<"offset"<<m_anchorOffset;
+//	QPoint final_point =mappedPoint + contentPosition + anchorPosition + m_anchorOffset + QPoint(0,-30);
+//	qInfo()<<"final point"<<final_point;
 	move(mappedPoint + contentPosition + anchorPosition + m_anchorOffset);
 }
 
+void HoverWidget::showEvent(QShowEvent *event)
+{
+	moveToAnchor();
+	QWidget::showEvent(event);
+}
 
+void HoverWidget::paintEvent(QPaintEvent *e) {
+	// https://forum.qt.io/topic/25142/solved-applying-style-on-derived-widget-with-custom-property-failes/2
+	// https://doc.qt.io/qt-5/stylesheet-reference.html
 
+	QStyleOption opt;
+	opt.init(this);
+	QPainter p(this);
+	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}

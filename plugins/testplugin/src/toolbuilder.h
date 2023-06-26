@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "ui_tooltemplate.h"
+#include "mapstackedwidget.h"
 
 namespace Ui {
 class ToolTemplate;
@@ -27,11 +28,17 @@ public:
 	ToolTemplate(QWidget *parent = nullptr);
 	~ToolTemplate();
 
-	QWidget* bottomContainer();
-	QWidget* topContainer();
-	QWidget* leftContainer();
+	QWidget *bottomContainer();
+	QWidget *topContainer();
+	QWidget *leftContainer();
 	QWidget *rightContainer();
-	QWidget* topContainerMenuControl();
+	QWidget *topContainerMenuControl();
+	QWidget *centralContainer();
+	MapStackedWidget *leftStack();
+	MapStackedWidget *rightStack();
+
+	MapStackedWidget *m_leftStack;
+	MapStackedWidget *m_rightStack;
 
 	void setLeftContainerWidth(int w);
 	void setRightContainerWidth(int w);
@@ -39,8 +46,11 @@ public:
 	void addWidgetToTopContainerHelper(QWidget *w, enum ToolTemplateAlignment);
 	void addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemplateAlignment a);
 	void addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlignment a);
-
+public Q_SLOTS:
+	void requestMenu(QString);
+private:
 	Ui::ToolTemplate *m_ui;
+
 };
 }
 

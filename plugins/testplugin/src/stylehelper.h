@@ -15,9 +15,12 @@
 #include <gui/dynamicWidget.h>
 #include <gui/menu_anim.hpp>
 
+#include <gui/semiexclusivebuttongroup.h>
+#include <QVBoxLayout>
+
 
 namespace scopy {
-class SCOPY_TESTPLUGIN_EXPORT StyleHelper : public QPushButton {
+class SCOPY_TESTPLUGIN_EXPORT StyleHelper : public QObject {
 	Q_OBJECT
 protected:
 	StyleHelper(QObject *parent = nullptr);
@@ -34,6 +37,7 @@ public:
 	static void SquareToggleButtonWithIcon(QPushButton* btn, QString objectName, bool checkable = false);
 	static void BlueButton(QPushButton *btn, QString objectName, bool checkable, QSize size = QSize(128,48));
 	static void BlueSquareCheckbox(QCheckBox *chk, QString objectName);
+	static void CollapseCheckbox(QCheckBox *chk, QString objectName);
 	static void ColoredCircleCheckbox(QCheckBox *chk, QColor color, QString objectName);
 	static void ColoredSquareCheckbox(QCheckBox *chk, QColor color, QString objectName);
 	static void MenuControlLabel(QLabel * lbl, QString objectName);
@@ -45,6 +49,34 @@ private:
 	static StyleHelper * pinstance_;
 };
 
+
+class SCOPY_TESTPLUGIN_EXPORT VerticalChannelManager : public QWidget {
+	Q_OBJECT
+public:
+	VerticalChannelManager(QWidget *parent = nullptr) : QWidget(parent) {
+		lay = new QVBoxLayout(this);
+		setLayout(lay);
+		lay->setMargin(0);
+		lay->setSpacing(6);
+		spacer = new QSpacerItem(20,20,QSizePolicy::Expanding,QSizePolicy::Expanding);
+		lay->addSpacerItem(spacer);
+		setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Expanding);
+
+	}
+	~VerticalChannelManager(){}
+	void add(QWidget* ch) {
+		int position = lay->indexOf(spacer);
+		lay->insertWidget(position,ch);
+		ch->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+	}
+
+private:
+	QSpacerItem *spacer;
+	QVBoxLayout *lay;
+};
+
+
+
 class SCOPY_TESTPLUGIN_EXPORT MenuControlButton : public QAbstractButton {
 	Q_OBJECT
 public:
@@ -52,6 +84,7 @@ public:
 		CS_CIRCLE,
 		CS_SQUARE,
 		CS_BLUESQUARE,
+		CS_COLLAPSE,
 	} CheckboxStyle;
 
 	MenuControlButton(QObject *parent = nullptr) {
@@ -114,6 +147,9 @@ private:
 		case CS_SQUARE:
 			StyleHelper::ColoredSquareCheckbox(m_chk,0xFFFFFF,"chk");
 			break;
+		case CS_COLLAPSE:
+			StyleHelper::CollapseCheckbox(m_chk,"chk");
+			break;
 		default:
 			StyleHelper::BlueSquareCheckbox(m_chk,"chk");
 			break;
@@ -131,7 +167,50 @@ private:
 	CheckboxStyle m_cs;
 };
 
-//class MenuControlWidget :
+class SCOPY_TESTPLUGIN_EXPORT CollapsableMenuControlButton : public QWidget {
+	Q_OBJECT
+public:
+	CollapsableMenuControlButton(QWidget *parent = nullptr) : QWidget(parent) {
+		m_lay = new QVBoxLayout(this);
+		m_lay->setMargin(0);
+		m_lay->setSpacing(0);
+		setLayout(m_lay);
+		m_ctrl = new MenuControlButton(this);
+		m_ctrl->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+		m_ctrl->setCheckBoxStyle(MenuControlButton::CS_COLLAPSE);
+		m_ctrl->setCheckable(false);
+		m_ctrl->checkBox()->setChecked(true);
+		m_lay->addWidget(m_ctrl);
+		QWidget *container = new QWidget(this);
+		m_lay->addWidget(container);
+		m_contLayout = new QVBoxLayout(container);
+		container->setLayout(m_contLayout);
+		m_contLayout->setMargin(0);
+		m_contLayout->setSpacing(0);
+
+		connect(m_ctrl->checkBox(),SIGNAL(toggled(bool)),container,SLOT(setVisible(bool)));
+	}
+
+	~CollapsableMenuControlButton() {}
+
+	void add(QWidget *ch) {
+		ch->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+		m_contLayout->addWidget(ch);
+	}
+
+	MenuControlButton *getControlBtn() {
+		return m_ctrl;
+	}
+
+private:
+	MenuControlButton *m_ctrl;
+	QWidget *m_container;
+	QVBoxLayout *m_contLayout;
+	QVBoxLayout *m_lay;
+
+};
+
+
 
 class SCOPY_TESTPLUGIN_EXPORT PrintBtn : public QPushButton {
 	Q_OBJECT
@@ -145,16 +224,38 @@ public:
 class SCOPY_TESTPLUGIN_EXPORT OpenLastMenuBtn : public QPushButton {
 	Q_OBJECT
 public:
-	OpenLastMenuBtn(MenuAnim *menu, bool opened, QWidget *parent = nullptr) : QPushButton(parent), m_menu(menu) {		QIcon icon1;
+	OpenLastMenuBtn(MenuAnim *menu, bool opened, QWidget *parent = nullptr) : QPushButton(parent), m_menu(menu) {
+		QIcon icon1;
 		icon1.addPixmap(Util::ChangeSVGColor(":/gui/icons/scopy-default/icons/setup3_unchecked_hover.svg","white",1));
 		setIcon(icon1);
 		StyleHelper::SquareToggleButtonWithIcon(this,"open_last_menu_btn",true);
 		setChecked(opened);
+		grp = new gui::SemiExclusiveButtonGroup(this);
 		connect(this, &QPushButton::toggled, m_menu, &MenuAnim::toggleMenu);
+		connect(grp,&gui::SemiExclusiveButtonGroup::buttonSelected, this, [=](QAbstractButton* btn) {
+			if(btn == nullptr){
+				this->setChecked(false);
+			}
+			else {
+				this->setChecked(true);
+			}
+		});
+		connect(this,&QAbstractButton::toggled, this, [=](bool b){
+			if(b) {
+				grp->getLastButton()->setChecked(true);
+			} else {
+				grp->getLastButton()->setChecked(false);
+
+			}
+		});		
+	}
+	QButtonGroup *getButtonGroup() {
+		return grp;
 	}
 
 private:
 	MenuAnim *m_menu;
+	gui::SemiExclusiveButtonGroup *grp;
 };
 
 class SCOPY_TESTPLUGIN_EXPORT GearBtn : public QPushButton {

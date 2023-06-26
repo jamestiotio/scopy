@@ -33,7 +33,7 @@ public:
 	HoverPosition getContentPos();
 	void setContentPos(HoverPosition);
 
-private:
+public:
 	void moveToAnchor();
 
 private:
@@ -45,6 +45,12 @@ private:
 	QPoint m_anchorOffset;
 	HoverPosition m_anchorPos;
 	HoverPosition m_contentPos;
+
+
+	// QWidget interface
+protected:
+	void showEvent(QShowEvent *event) override;
+	void paintEvent(QPaintEvent *e) override;
 };
 }
 #endif // HOVERWIDGET_H

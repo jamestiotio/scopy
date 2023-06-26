@@ -9,6 +9,13 @@ ToolTemplate::ToolTemplate(QWidget *parent) : QWidget(parent)
 	m_ui->topContainer->setVisible(false);
 	m_ui->leftContainer->setVisible(false);
 	m_ui->rightContainer->setVisible(false);
+	m_leftStack = new MapStackedWidget(m_ui->leftContainer);
+	m_rightStack = new MapStackedWidget(m_ui->rightContainer);
+
+	m_ui->leftContainer->layout()->addWidget(m_leftStack);
+	m_ui->rightContainer->layout()->addWidget(m_rightStack);
+	m_leftStack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	m_rightStack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 ToolTemplate::~ToolTemplate()
@@ -36,6 +43,21 @@ QWidget *ToolTemplate::topContainerMenuControl()
 	return m_ui->topContainerMenuControl;
 }
 
+QWidget *ToolTemplate::centralContainer()
+{
+	return m_ui->centralContainer;
+}
+
+MapStackedWidget *ToolTemplate::leftStack()
+{
+	return m_leftStack;
+}
+
+MapStackedWidget *ToolTemplate::rightStack()
+{
+	return m_rightStack;
+}
+
 QWidget *ToolTemplate::leftContainer()
 {
 	return m_ui->leftContainer;
@@ -43,6 +65,8 @@ QWidget *ToolTemplate::leftContainer()
 
 void ToolTemplate::setLeftContainerWidth(int w)
 {
+	dynamic_cast<MenuAnim*>(m_ui->leftContainer)->setAnimMinWidth(0);
+	dynamic_cast<MenuAnim*>(m_ui->leftContainer)->setAnimMaxWidth(w);
 	m_ui->leftContainer->setMaximumWidth(w);
 	m_ui->leftContainer->setMinimumWidth(w);
 }
@@ -63,11 +87,10 @@ void ToolTemplate::addWidgetToTopContainerHelper(QWidget *w, ToolTemplateAlignme
 	auto idx = lay1->indexOf(m_ui->topContainerSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
-		offset = 0;
+		lay1->insertWidget(idx,w);
 	} else {
-		offset = 1;
+		lay1->insertWidget(-1,w);
 	}
-	lay1->insertWidget(idx+offset,w);
 }
 
 void ToolTemplate::addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemplateAlignment a) {
@@ -75,11 +98,10 @@ void ToolTemplate::addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemp
 	auto idx = lay1->indexOf(m_ui->topContainerMenuControlSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
-		offset = 0;
+		lay1->insertWidget(idx,w);
 	} else {
-		offset = 1;
-	}
-	lay1->insertWidget(idx+offset,w);
+		lay1->insertWidget(-1,w);
+	}	
 }
 
 void ToolTemplate::addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlignment a)
@@ -88,11 +110,24 @@ void ToolTemplate::addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlig
 	auto idx = lay1->indexOf(m_ui->bottomContainerSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
-		offset = 0;
+		lay1->insertWidget(idx,w);
 	} else {
-		offset = 1;
+		lay1->insertWidget(-1,w);
 	}
-	lay1->insertWidget(idx+offset,w);
+
+}
+
+void ToolTemplate::requestMenu(QString key)
+{
+	if(m_leftStack->contains(key)) {
+		m_leftStack->show(key);
+		return;
+	}
+
+	if(m_rightStack->contains(key)) {
+		m_rightStack->show(key);
+		return;
+	}
 }
 
 

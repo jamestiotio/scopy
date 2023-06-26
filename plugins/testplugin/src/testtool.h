@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <scopy-testplugin_export.h>
+#include "gui/mapstackedwidget.h"
 
 using namespace scopy;
 

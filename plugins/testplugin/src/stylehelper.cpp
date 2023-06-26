@@ -146,6 +146,35 @@ void StyleHelper::ColoredCircleCheckbox(QCheckBox *chk, QColor color, QString ob
 	chk->setStyleSheet(style);
 }
 
+void StyleHelper::CollapseCheckbox(QCheckBox *chk, QString objectName) {
+	chk->setObjectName(objectName);
+	chk->setFixedSize(16,16);
+	QString style = QString(R"css(
+						QCheckBox {
+							width:16px;
+							height:16px;
+							background-color: rgba(128,128,128,0);
+							color: rgba(255, 255, 255, 0);
+						}
+						QCheckBox::indicator {
+							width: 12px;
+							height: 12px;
+							border: 2px transparent;
+							background-color: transparent;
+						}
+						QCheckBox::indicator:unchecked {
+							image: url(:/gui/icons/scopy-default/icons/sba_cmb_box_arrow_right.svg);
+							background-color: transparent;
+						}
+						QCheckBox::indicator:checked {
+							image: url(:/gui/icons/scopy-default/icons/sba_cmb_box_arrow.svg);
+							background-color: transparent;
+						}
+						)css");
+	style.replace("&&UIElementBackground&&",StyleHelper::getColor("UIElementBackground"));
+	chk->setStyleSheet(style);
+}
+
 void StyleHelper::ColoredSquareCheckbox(QCheckBox *chk, QColor color, QString objectName) {
 	chk->setObjectName(objectName);
 	chk->setFixedSize(16,16);
@@ -172,9 +201,9 @@ void StyleHelper::ColoredSquareCheckbox(QCheckBox *chk, QColor color, QString ob
 
 void StyleHelper::MenuControlLabel(QLabel *lbl, QString objectName) {
 	lbl->setObjectName(objectName);
-	lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	lbl->setMinimumWidth(80);
-	lbl->setMaximumWidth(80);
+//	lbl->setMaximumWidth(80);
 	QString style = QString(R"css(
 							QLabel {
 								color: white;
@@ -220,3 +249,4 @@ void StyleHelper::MenuControlWidget(QWidget *w, QColor color, QString objectName
 	style.replace("&&UIElementBackground&&",StyleHelper::getColor("UIElementBackground"));
 	w->setStyleSheet(style);
 }
+
