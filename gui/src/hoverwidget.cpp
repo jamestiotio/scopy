@@ -3,8 +3,9 @@
 #include <QPaintEvent>
 #include <QStyleOption>
 #include <QPainter>
-
+#include <QLoggingCategory>
 using namespace scopy;
+Q_LOGGING_CATEGORY(CAT_HOVERWIDGET,"HoverWidget")
 
 HoverWidget::HoverWidget(QWidget *content,
 						 QWidget *anchor,
@@ -51,7 +52,7 @@ bool HoverWidget::eventFilter(QObject *watched, QEvent *event)
 		}
 	}
 
-	return false;
+	return QObject::eventFilter(watched,event);
 }
 
 QPoint HoverWidget::getAnchorOffset()
@@ -88,17 +89,11 @@ void HoverWidget::setContentPos(HoverPosition pos)
 
 void HoverWidget::moveToAnchor()
 {
-//	qInfo()<<(mapFrom(m_parent,m_anchor->pos()));
-//	mapTo(m_parent,m_anchor->pos());
-
 	QPoint global = m_anchor->mapToGlobal(QPoint(0,0));
 	QPoint mappedPoint =  m_parent->mapFromGlobal(global);
-
-	qInfo()<<m_anchor->pos();
-	qInfo()<< global;
-	qInfo()<< mappedPoint;
 	QPoint anchorPosition = QPoint(0,0);
 	QPoint contentPosition = QPoint(0,0);
+
 	switch (m_anchorPos) {
 	case HP_LEFT:
 		anchorPosition = QPoint(0 , m_anchor->height() / 2);
@@ -166,10 +161,8 @@ void HoverWidget::moveToAnchor()
 		break;
 	}
 
-	qInfo()<<"mapped"<<mappedPoint<<"contentPosition"<<contentPosition<<
+	qDebug(CAT_HOVERWIDGET)<<"moveAnchor"<<"mapped"<<mappedPoint<<"contentPosition"<<contentPosition<<
 		"anchorPosition"<<anchorPosition<<"offset"<<m_anchorOffset;
-//	QPoint final_point =mappedPoint + contentPosition + anchorPosition + m_anchorOffset + QPoint(0,-30);
-//	qInfo()<<"final point"<<final_point;
 	move(mappedPoint + contentPosition + anchorPosition + m_anchorOffset);
 }
 

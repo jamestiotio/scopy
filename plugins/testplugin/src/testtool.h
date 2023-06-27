@@ -2,7 +2,7 @@
 #define TESTTOOL_H
 
 #include <QWidget>
-#include "toolbuilder.h"
+#include "gui/tooltemplate.h"
 #include <QPushButton>
 #include <QCheckBox>
 #include <QLabel>
@@ -16,6 +16,7 @@ class SCOPY_TESTPLUGIN_EXPORT TestTool : public QWidget
 public:
 	TestTool(QWidget *parent = nullptr);
 
+	void setupPlot();
 private:
 	ToolTemplate *tool;
 	QPushButton *btn1, *btn2, *btn3;

@@ -1,4 +1,5 @@
-#include "toolbuilder.h"
+#include "tooltemplate.h"
+#include "ui_tooltemplate.h"
 
 using namespace scopy;
 ToolTemplate::ToolTemplate(QWidget *parent) : QWidget(parent)
@@ -81,9 +82,21 @@ void ToolTemplate::setRightContainerWidth(int w)
 	m_ui->rightContainer->setMinimumWidth(w);
 }
 
+void ToolTemplate::openLeftContainerHelper(bool open)
+{
+	m_ui->leftContainer->toggleMenu(open);
+}
+
+void ToolTemplate::openRightContainerHelper(bool open)
+{
+	m_ui->rightContainer->toggleMenu(open);
+}
+
 void ToolTemplate::addWidgetToTopContainerHelper(QWidget *w, ToolTemplateAlignment a)
 {
-	auto lay1 = static_cast<QHBoxLayout*>(topContainer()->layout());
+	auto lay1 = dynamic_cast<QHBoxLayout*>(topContainer()->layout());
+	Q_ASSERT(lay1 != nullptr);
+
 	auto idx = lay1->indexOf(m_ui->topContainerSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
@@ -94,7 +107,8 @@ void ToolTemplate::addWidgetToTopContainerHelper(QWidget *w, ToolTemplateAlignme
 }
 
 void ToolTemplate::addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemplateAlignment a) {
-	auto lay1 = static_cast<QHBoxLayout*>(topContainerMenuControl()->layout());
+	auto lay1 = dynamic_cast<QHBoxLayout*>(topContainerMenuControl()->layout());
+	Q_ASSERT(lay1 != nullptr);
 	auto idx = lay1->indexOf(m_ui->topContainerMenuControlSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
@@ -106,7 +120,8 @@ void ToolTemplate::addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemp
 
 void ToolTemplate::addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlignment a)
 {
-	auto lay1 = static_cast<QHBoxLayout*>(bottomContainer()->layout());
+	auto lay1 = dynamic_cast<QHBoxLayout*>(bottomContainer()->layout());
+	Q_ASSERT(lay1 != nullptr);
 	auto idx = lay1->indexOf(m_ui->bottomContainerSpacer);
 	int offset;
 	if(a == TTA_LEFT) {
@@ -115,6 +130,14 @@ void ToolTemplate::addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlig
 		lay1->insertWidget(-1,w);
 	}
 
+}
+
+void ToolTemplate::addWidgetToCentralContainerHelper(QWidget *w)
+{
+	auto lay1 = dynamic_cast<QVBoxLayout*>(centralContainer()->layout());
+	Q_ASSERT(lay1 != nullptr);
+
+	lay1->addWidget(w);
 }
 
 void ToolTemplate::requestMenu(QString key)

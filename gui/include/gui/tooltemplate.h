@@ -2,8 +2,8 @@
 #define TOOLBUILDER_H
 
 #include <QWidget>
-#include "ui_tooltemplate.h"
 #include "mapstackedwidget.h"
+#include "scopy-gui_export.h"
 
 namespace Ui {
 class ToolTemplate;
@@ -22,7 +22,7 @@ enum ToolTemplateContainer {
 	TTC_BOT
 };
 
-class ToolTemplate : public QWidget
+class SCOPY_GUI_EXPORT ToolTemplate : public QWidget
 {
 public:
 	ToolTemplate(QWidget *parent = nullptr);
@@ -42,10 +42,13 @@ public:
 
 	void setLeftContainerWidth(int w);
 	void setRightContainerWidth(int w);
+	void openLeftContainerHelper(bool open = true);
+	void openRightContainerHelper(bool open = true);
 
 	void addWidgetToTopContainerHelper(QWidget *w, enum ToolTemplateAlignment);
 	void addWidgetToTopContainerMenuControlHelper(QWidget *w, ToolTemplateAlignment a);
 	void addWidgetToBottomContainerHelper(QWidget *w, ToolTemplateAlignment a);
+	void addWidgetToCentralContainerHelper(QWidget *w);
 public Q_SLOTS:
 	void requestMenu(QString);
 private:

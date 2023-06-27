@@ -2,13 +2,76 @@
 #include <QHBoxLayout>
 #include <gui/menu_anim.hpp>
 #include <QDebug>
-#include "stylehelper.h"
+#include <gui/stylehelper.h>
 #include <QButtonGroup>
 #include <hoverwidget.h>
+
+#include <QwtPlot>
+#include <QwtPlotLayout>
+#include <QwtPlotSeriesItem>
+#include <gui/DisplayPlot.h>
+#include <gui/customqwtscaledraw.hpp>
 
 using namespace scopy;
 
 QMap<QString, QColor> colorMap;
+
+float vals[4] = {1,2,3,4};
+class Plot : public QwtPlot {
+public:
+	Plot(QWidget *parent = nullptr) : QwtPlot(parent) {
+
+
+
+		setAxisScale(QwtAxisId(QwtAxis::XBottom,0),-10,10,2);
+		setAxisScale(QwtAxisId(QwtAxis::YLeft,0),-10,10,2);
+
+		OscScaleDraw *xScaleDraw = new OscScaleDraw(new MetricPrefixFormatter(),"");
+		OscScaleDraw *yScaleDraw = new OscScaleDraw(new MetricPrefixFormatter(),"");
+
+//		xScaleDraw->enableDeltaLabel(true);
+//		yScaleDraw->enableDeltaLabel(true);
+//		yScaleDraw->setLabelRotation(66);
+
+		plotLayout()->setAlignCanvasToScales( true );
+
+		axisWidget(QwtAxisId(QwtAxis::YLeft,0))->setMargin(0);
+
+		setAxisScaleDraw(QwtAxisId(QwtAxis::XBottom,0),xScaleDraw);
+		setAxisScaleDraw(QwtAxisId(QwtAxis::YLeft,0), yScaleDraw);
+		setAxisVisible(QwtAxisId(QwtAxis::XBottom,0), false);
+		setAxisVisible(QwtAxisId(QwtAxis::YLeft,0), false);
+		// Plot needs a grid
+		EdgelessPlotGrid *d_grid = new EdgelessPlotGrid();
+		QColor majorPenColor("#353537");
+		d_grid->setMajorPen(majorPenColor, 1.0, Qt::DashLine);
+		d_grid->attach(this);
+
+		QwtPlotMarker *d_origin = new QwtPlotMarker();
+		d_origin->setLineStyle( QwtPlotMarker::Cross );
+		d_origin->setValue( 0, 0.0 );
+		d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
+		d_origin->attach( this );
+
+		QwtPlotCurve *c1 = new QwtPlotCurve();
+		c1->setVisible(true);
+		c1->setStyle( QwtPlotCurve::Lines );
+		c1->setPen(QColor("red"),1);
+		c1->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+		c1->setPaintAttribute( QwtPlotCurve::ClipPolygons, false );
+
+		c1->attach(this);
+
+		c1->setSamples(vals,vals,4);
+
+
+
+
+
+		};
+	~Plot() {};
+};
+
 
 TestTool::TestTool(QWidget *parent)
 {
@@ -24,10 +87,11 @@ TestTool::TestTool(QWidget *parent)
 	lay->addWidget(tool);
 
 	StyleHelper::GetInstance()->initColorMap();
-	btn3 = new OpenLastMenuBtn(dynamic_cast<MenuAnim*>(tool->rightContainer()),true,this);
+	btn3 = new OpenLastMenuBtn(dynamic_cast<MenuAnim*>(tool->rightContainer()),false,this);
 	tool->setLeftContainerWidth(200);
 	tool->setRightContainerWidth(300);
-
+	tool->openLeftContainerHelper(false);
+	tool->openRightContainerHelper(false);
 
 	GearBtn *btn5 = new GearBtn(this);
 	RunBtn *runBtn = new RunBtn(this);
@@ -134,6 +198,18 @@ TestTool::TestTool(QWidget *parent)
 
 	});
 
+	setupPlot();
+
+
 
 }
+
+
+void TestTool::setupPlot() {
+	Plot *plot = new Plot(this);
+	tool->addWidgetToCentralContainerHelper(plot);
+	plot->replot();
+
+}
+
 

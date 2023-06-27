@@ -118,9 +118,9 @@ ScopyMainWindow::ScopyMainWindow(QWidget *parent)
 	sbc->startScan();
 
 #ifdef SCOPY_DEV_MODE
-	//	auto id = dm->createDevice("m2k","ip:127.0.0.1"), false;
-	//	auto id = dm->createDevice("iio","ip:10.48.65.163", false);
-	//	auto id = dm->createDevice("iio","ip:192.168.2.1", false);
+//	auto id = dm->createDevice("m2k","ip:127.0.0.1"), false;
+//	auto id = dm->createDevice("iio","ip:10.48.65.163", false);
+//	auto id = dm->createDevice("iio","ip:192.168.2.1", false);
 	auto id = dm->createDevice("test","", false);
 
 	auto d = dm->getDevice(id);

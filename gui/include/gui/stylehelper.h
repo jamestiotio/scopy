@@ -10,17 +10,17 @@
 #include <QStyle>
 #include <QPainter>
 
-#include <scopy-testplugin_export.h>
-#include <gui/utils.h>
-#include <gui/dynamicWidget.h>
-#include <gui/menu_anim.hpp>
+#include <scopy-gui_export.h>
+#include <utils.h>
+#include <dynamicWidget.h>
+#include <menu_anim.hpp>
 
-#include <gui/semiexclusivebuttongroup.h>
+#include <semiexclusivebuttongroup.h>
 #include <QVBoxLayout>
 
 
 namespace scopy {
-class SCOPY_TESTPLUGIN_EXPORT StyleHelper : public QObject {
+class SCOPY_GUI_EXPORT StyleHelper : public QObject {
 	Q_OBJECT
 protected:
 	StyleHelper(QObject *parent = nullptr);
@@ -50,7 +50,7 @@ private:
 };
 
 
-class SCOPY_TESTPLUGIN_EXPORT VerticalChannelManager : public QWidget {
+class SCOPY_GUI_EXPORT VerticalChannelManager : public QWidget {
 	Q_OBJECT
 public:
 	VerticalChannelManager(QWidget *parent = nullptr) : QWidget(parent) {
@@ -77,7 +77,7 @@ private:
 
 
 
-class SCOPY_TESTPLUGIN_EXPORT MenuControlButton : public QAbstractButton {
+class SCOPY_GUI_EXPORT MenuControlButton : public QAbstractButton {
 	Q_OBJECT
 public:
 	typedef enum {
@@ -167,7 +167,7 @@ private:
 	CheckboxStyle m_cs;
 };
 
-class SCOPY_TESTPLUGIN_EXPORT CollapsableMenuControlButton : public QWidget {
+class SCOPY_GUI_EXPORT CollapsableMenuControlButton : public QWidget {
 	Q_OBJECT
 public:
 	CollapsableMenuControlButton(QWidget *parent = nullptr) : QWidget(parent) {
@@ -212,7 +212,7 @@ private:
 
 
 
-class SCOPY_TESTPLUGIN_EXPORT PrintBtn : public QPushButton {
+class SCOPY_GUI_EXPORT PrintBtn : public QPushButton {
 	Q_OBJECT
 public:
 	PrintBtn(QWidget *parent = nullptr) : QPushButton(parent) {
@@ -221,7 +221,7 @@ public:
 	}
 };
 
-class SCOPY_TESTPLUGIN_EXPORT OpenLastMenuBtn : public QPushButton {
+class SCOPY_GUI_EXPORT OpenLastMenuBtn : public QPushButton {
 	Q_OBJECT
 public:
 	OpenLastMenuBtn(MenuAnim *menu, bool opened, QWidget *parent = nullptr) : QPushButton(parent), m_menu(menu) {
@@ -258,7 +258,7 @@ private:
 	gui::SemiExclusiveButtonGroup *grp;
 };
 
-class SCOPY_TESTPLUGIN_EXPORT GearBtn : public QPushButton {
+class SCOPY_GUI_EXPORT GearBtn : public QPushButton {
 	Q_OBJECT
 public:
 	GearBtn(QWidget *parent = nullptr) : QPushButton(parent) {
@@ -269,7 +269,7 @@ public:
 	}
 };
 
-class SCOPY_TESTPLUGIN_EXPORT InfoBtn : public QPushButton {
+class SCOPY_GUI_EXPORT InfoBtn : public QPushButton {
 	Q_OBJECT
 public:
 	InfoBtn(QWidget *parent = nullptr) : QPushButton(parent) {
@@ -281,7 +281,7 @@ public:
 };
 
 
-class SCOPY_TESTPLUGIN_EXPORT RunBtn : public QPushButton {
+class SCOPY_GUI_EXPORT RunBtn : public QPushButton {
 	Q_OBJECT
 public:
 	RunBtn (QWidget *parent = nullptr) : QPushButton(parent) {
@@ -325,7 +325,7 @@ public:
 	}
 };
 
-class SCOPY_TESTPLUGIN_EXPORT SingleShotBtn : public QPushButton {
+class SCOPY_GUI_EXPORT SingleShotBtn : public QPushButton {
 	Q_OBJECT
 public:
 	SingleShotBtn (QWidget *parent = nullptr) : QPushButton(parent) {
