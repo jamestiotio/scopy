@@ -11,44 +11,37 @@
 #include <QMouseEvent>
 #include <osc_scale_engine.h>
 #include <QObject>
+#include "plotaxis.h"
+#include <pluginbase/preferences.h>
+#include <QwtPlotOpenGLCanvas>
 
 using namespace scopy;
 
 
 Plot::Plot(QWidget *parent) : QwtPlot(parent) {
 
-	setAxisScale(QwtAxisId(QwtAxis::YLeft,0),-5,5,(5- (-5))/10.0); // set Divs, limits
-	OscScaleDraw *xScaleDraw = new OscScaleDraw(new TimePrefixFormatter(),"");    // set Formatter (?)
-	setAxisScaleDraw(QwtAxisId(QwtAxis::XBottom,0),xScaleDraw);
-	OscScaleEngine *xScaleEngine = new OscScaleEngine();
-	this->setAxisScaleEngine(QwtAxisId(QwtAxis::XBottom,0), (QwtScaleEngine *)xScaleEngine);
-	setAxisVisible(QwtAxisId(QwtAxis::XBottom,0), true);
+	setupOpenGLCanvas();
 
+	addPlotAxis(new PlotAxis(QwtAxis::XBottom,this,this));
+	addPlotAxis(new PlotAxis(QwtAxis::YLeft,this,this));
 
-	setAxisScale(QwtAxisId(QwtAxis::XBottom,0),0,0.1,((0.1-0)/16.0)); // set divs , limits	
-	OscScaleDraw *yScaleDraw = new OscScaleDraw(new MetricPrefixFormatter(),"V"); //
-	setAxisScaleDraw(QwtAxisId(QwtAxis::YLeft,0), yScaleDraw);
-	OscScaleEngine *yScaleEngine = new OscScaleEngine();
-	this->setAxisScaleEngine(QwtAxisId(QwtAxis::YLeft,0), (QwtScaleEngine *)yScaleEngine);
-	setAxisVisible(QwtAxisId(QwtAxis::YLeft,0), true);
-
-	plotLayout()->setAlignCanvasToScales( true );
+	plotLayout()->setAlignCanvasToScales( false );
 	axisWidget(QwtAxisId(QwtAxis::YLeft,0))->setMargin(0);
 
 	setupAxisScales();
 	setAxisScalesVisible(true);
+
 	// Plot needs a grid
 	EdgelessPlotGrid *d_grid = new EdgelessPlotGrid();
-
 	QColor majorPenColor("#353537");
 	d_grid->setMajorPen(majorPenColor, 1.0, Qt::DashLine);
 	d_grid->attach(this);
 
-//	QwtPlotMarker *d_origin = new QwtPlotMarker();
-//	d_origin->setLineStyle( QwtPlotMarker::Cross );
-//	d_origin->setValue( 0, 0.0 );
-//	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
-//	d_origin->attach( this );
+	QwtPlotMarker *d_origin = new QwtPlotMarker();
+	d_origin->setLineStyle( QwtPlotMarker::Cross );
+	d_origin->setValue( 0, 0.0 );
+	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
+	d_origin->attach( this );
 
 	graticule = new Graticule(this);
 	connect(this, SIGNAL(canvasSizeChanged()),graticule,SLOT(onCanvasSizeChanged()));
@@ -82,6 +75,25 @@ void Plot::setupAxisScales() {
 	}
 }
 
+void Plot::setupOpenGLCanvas()
+{
+	bool useOpenGLCanvas = Preferences::GetInstance()->get("general_use_opengl").toBool();
+	if(useOpenGLCanvas) {
+		QwtPlotOpenGLCanvas* plotCanvas = qobject_cast< QwtPlotOpenGLCanvas* >( canvas() );
+		if ( plotCanvas == NULL )
+		{
+			plotCanvas = new QwtPlotOpenGLCanvas(this);
+			plotCanvas->setPaintAttribute(QwtPlotAbstractGLCanvas::BackingStore );
+			setCanvas( plotCanvas );
+		} else {
+			;
+		}
+	} else {
+		QwtPlotCanvas *plotCanvas = qobject_cast<QwtPlotCanvas *>( canvas() );
+		plotCanvas->setPaintAttribute(QwtPlotCanvas::BackingStore, true);
+	}
+}
+
 void Plot::setAxisScalesVisible(bool visible) {
 	for(QwtPlotScaleItem* scale : qAsConst(m_scaleItems)){
 		if(visible){
@@ -100,6 +112,14 @@ void Plot::addPlotChannel(PlotChannel *ch)
 void Plot::removePlotChannel(PlotChannel *ch)
 {
 	m_plotChannels.removeAll(ch);
+}
+
+void Plot::addPlotAxis(PlotAxis *ax)
+{
+	if(ax->isHorizontal())
+		m_horizontalPlotAxis.append(ax);
+	else
+		m_verticalPlotAxis.append(ax);
 }
 
 bool Plot::getDisplayGraticule() const
@@ -152,5 +172,15 @@ bool Plot::eventFilter(QObject *object, QEvent *event)
 		}
 	}
 	return QObject::eventFilter(object, event);
+}
+
+const QList<PlotAxis *> &Plot::horizontalPlotAxis() const
+{
+	return m_horizontalPlotAxis;
+}
+
+const QList<PlotAxis *> &Plot::verticalPlotAxis() const
+{
+	return m_verticalPlotAxis;
 }
 

@@ -12,8 +12,8 @@ using namespace scopy;
 
 QMap<QString, QColor> colorMap;
 
-float vals[4] = {1,2,3,4};
-float vals2[4] = {4,5,6,7};
+float vals[4] = {0.1,0.2,0.3,0.4};
+float vals2[4] = {0.4,0.5,0.6,0.7};
 
 
 TestTool::TestTool(QWidget *parent)

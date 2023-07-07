@@ -1,8 +1,11 @@
 #include "plotchannel.h"
 #include <QPen>
+#include "plot.h"
+#include "plotaxis.h"
 
+using namespace scopy;
 
-PlotChannel::PlotChannel(QString name, QPen pen, QwtPlot *plot, QObject *parent)
+PlotChannel::PlotChannel(QString name, QPen pen, Plot *plot, QObject *parent)
     : QObject(parent),
       m_plot(plot)
 {
@@ -24,6 +27,11 @@ PlotChannel::~PlotChannel()
 QwtPlotCurve *PlotChannel::curve() const
 {
 	return m_curve;
+}
+
+void PlotChannel::setAxes(PlotAxis *x_axis, PlotAxis *y_axis)
+{
+	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
 }
 
 void PlotChannel::setEnabled(bool b)

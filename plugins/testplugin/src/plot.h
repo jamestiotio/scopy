@@ -4,24 +4,30 @@
 #include "plotchannel.h"
 #include <QWidget>
 #include <graticule.h>
-#include "plotaxis.h"
 #include "scopy-testplugin_export.h"
 
 
 namespace scopy {
-
+class PlotAxis;
 class SCOPY_TESTPLUGIN_EXPORT Plot : public QwtPlot {
 	Q_OBJECT
 public:
-	Plot(QWidget *parent = nullptr); // openGL canvas, add PlotAxis, add handleArea, add ChannelHandles (/w axis), add Zoomer, add cursorHandles
+	Plot(QWidget *parent = nullptr); // add handleArea, connect handle to SetValue() add ChannelHandles (/w axis), add Zoomer, add cursorHandles
 	~Plot();
 
 	void addPlotChannel(PlotChannel *ch);
 	void removePlotChannel(PlotChannel *ch);
 
+	void addPlotAxis(PlotAxis *ax);
+	void removePlotAxis(PlotAxis *ax);
+
 	bool getDisplayGraticule() const;
 	void setDisplayGraticule(bool newDisplayGraticule);
 	bool eventFilter(QObject *object, QEvent *event) override;
+
+	const QList<PlotAxis *> &horizontalPlotAxis() const;
+
+	const QList<PlotAxis *> &verticalPlotAxis() const;
 
 Q_SIGNALS:
 	void canvasSizeChanged();
@@ -42,6 +48,7 @@ private:
 
 	void setAxisScalesVisible(bool visible);
 	void setupAxisScales();
+	void setupOpenGLCanvas();
 };
 }
 
