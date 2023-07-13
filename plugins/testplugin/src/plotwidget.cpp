@@ -1,4 +1,4 @@
-#include "plot.h"
+#include "plotwidget.h"
 #include <gui/BasicPlot.h>
 
 #include <gui/DisplayPlot.h>
@@ -18,15 +18,16 @@
 using namespace scopy;
 
 
-Plot::Plot(QWidget *parent) : QwtPlot(parent) {
+PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 
+	m_plot = new QwtPlot(this);
 	setupOpenGLCanvas();
 
 	addPlotAxis(new PlotAxis(QwtAxis::XBottom,this,this));
 	addPlotAxis(new PlotAxis(QwtAxis::YLeft,this,this));
 
-	plotLayout()->setAlignCanvasToScales( false );
-	axisWidget(QwtAxisId(QwtAxis::YLeft,0))->setMargin(0);
+	m_plot->plotLayout()->setAlignCanvasToScales( false );
+	m_plot->axisWidget(QwtAxisId(QwtAxis::YLeft,0))->setMargin(0);
 
 	setupAxisScales();
 	setAxisScalesVisible(true);
@@ -35,25 +36,41 @@ Plot::Plot(QWidget *parent) : QwtPlot(parent) {
 	EdgelessPlotGrid *d_grid = new EdgelessPlotGrid();
 	QColor majorPenColor("#353537");
 	d_grid->setMajorPen(majorPenColor, 1.0, Qt::DashLine);
-	d_grid->attach(this);
+	d_grid->attach(m_plot);
 
 	QwtPlotMarker *d_origin = new QwtPlotMarker();
 	d_origin->setLineStyle( QwtPlotMarker::Cross );
 	d_origin->setValue( 0, 0.0 );
 	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
-	d_origin->attach( this );
+	d_origin->attach( m_plot );
 
-	graticule = new Graticule(this);
+	graticule = new Graticule(m_plot);
 	connect(this, SIGNAL(canvasSizeChanged()),graticule,SLOT(onCanvasSizeChanged()));
 	setDisplayGraticule(false);
 
+
+	///////////////////
+	d_symbolCtrl = new SymbolController(m_plot);
+
+	/* Adjacent areas */
+	d_bottomHandlesArea = new HorizHandlesArea(m_plot->canvas());
+	d_rightHandlesArea = new VertHandlesArea(m_plot->canvas());
+	d_topHandlesArea = new HorizHandlesArea(m_plot->canvas());
+	d_leftHandlesArea = new VertHandlesArea(m_plot->canvas());
+
+	d_bottomHandlesArea->setMinimumHeight(50);
+	d_rightHandlesArea->setMinimumWidth(50);
+	//	d_bottomHandlesArea->setLargestChildWidth(60);
+	//	d_rightHandlesArea->setLargestChildHeight(60);
+	d_rightHandlesArea->setMinimumHeight(m_plot->minimumHeight());
+	d_rightHandlesArea->setBottomPadding(50);
 }
 
-Plot::~Plot() {
+PlotWidget::~PlotWidget() {
 
 }
 
-void Plot::setupAxisScales() {
+void PlotWidget::setupAxisScales() {
 	for (unsigned int i = 0; i < 4; i++) {
 		QwtScaleDraw::Alignment scale =
 		    static_cast<QwtScaleDraw::Alignment>(i);
@@ -62,59 +79,59 @@ void Plot::setupAxisScales() {
 		scaleItem->scaleDraw()->setAlignment(scale);
 		scaleItem->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Backbone, false);
 		scaleItem->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
-		scaleItem->setFont(this->axisWidget(0)->font());
+		scaleItem->setFont(m_plot->axisWidget(0)->font());
 
 		QPalette palette = scaleItem->palette();
 		palette.setBrush(QPalette::WindowText, QColor(0x6E6E6F));
 		palette.setBrush(QPalette::Text, QColor(0x6E6E6F));
 		scaleItem->setPalette(palette);
 		scaleItem->setBorderDistance(0);
-		scaleItem->attach(this);
+		scaleItem->attach(m_plot);
 		m_scaleItems.push_back(scaleItem);
 		scaleItem->setZ(200);
 	}
 }
 
-void Plot::setupOpenGLCanvas()
+void PlotWidget::setupOpenGLCanvas()
 {
 	bool useOpenGLCanvas = Preferences::GetInstance()->get("general_use_opengl").toBool();
 	if(useOpenGLCanvas) {
-		QwtPlotOpenGLCanvas* plotCanvas = qobject_cast< QwtPlotOpenGLCanvas* >( canvas() );
+		QwtPlotOpenGLCanvas* plotCanvas = qobject_cast< QwtPlotOpenGLCanvas* >( m_plot->canvas() );
 		if ( plotCanvas == NULL )
 		{
-			plotCanvas = new QwtPlotOpenGLCanvas(this);
+			plotCanvas = new QwtPlotOpenGLCanvas(m_plot);
 			plotCanvas->setPaintAttribute(QwtPlotAbstractGLCanvas::BackingStore );
-			setCanvas( plotCanvas );
+			m_plot->setCanvas( plotCanvas );
 		} else {
 			;
 		}
 	} else {
-		QwtPlotCanvas *plotCanvas = qobject_cast<QwtPlotCanvas *>( canvas() );
+		QwtPlotCanvas *plotCanvas = qobject_cast<QwtPlotCanvas *>( m_plot->canvas() );
 		plotCanvas->setPaintAttribute(QwtPlotCanvas::BackingStore, true);
 	}
 }
 
-void Plot::setAxisScalesVisible(bool visible) {
+void PlotWidget::setAxisScalesVisible(bool visible) {
 	for(QwtPlotScaleItem* scale : qAsConst(m_scaleItems)){
 		if(visible){
-			scale->attach(this);
+			scale->attach(m_plot);
 		} else {
 			scale->detach();
 		}
 	}
 }
 
-void Plot::addPlotChannel(PlotChannel *ch)
+void PlotWidget::addPlotChannel(PlotChannel *ch)
 {
 	m_plotChannels.append(ch);
 }
 
-void Plot::removePlotChannel(PlotChannel *ch)
+void PlotWidget::removePlotChannel(PlotChannel *ch)
 {
 	m_plotChannels.removeAll(ch);
 }
 
-void Plot::addPlotAxis(PlotAxis *ax)
+void PlotWidget::addPlotAxis(PlotAxis *ax)
 {
 	if(ax->isHorizontal())
 		m_horizontalPlotAxis.append(ax);
@@ -122,22 +139,22 @@ void Plot::addPlotAxis(PlotAxis *ax)
 		m_verticalPlotAxis.append(ax);
 }
 
-bool Plot::getDisplayGraticule() const
+bool PlotWidget::getDisplayGraticule() const
 {
 	return displayGraticule;
 }
 
-void Plot::setDisplayGraticule(bool newDisplayGraticule)
+void PlotWidget::setDisplayGraticule(bool newDisplayGraticule)
 {
 	displayGraticule = newDisplayGraticule;
 	setAxisScalesVisible(!displayGraticule);
 	graticule->enableGraticule(displayGraticule);
-	replot();
+	m_plot->replot();
 }
 
-bool Plot::eventFilter(QObject *object, QEvent *event)
+bool PlotWidget::eventFilter(QObject *object, QEvent *event)
 {
-	if (object == canvas()) {
+	if (object == m_plot->canvas()) {
 		switch (event->type()) {
 		case QEvent::MouseMove: {
 			Q_EMIT mouseMove(static_cast< QMouseEvent* >( event ));
@@ -174,13 +191,23 @@ bool Plot::eventFilter(QObject *object, QEvent *event)
 	return QObject::eventFilter(object, event);
 }
 
-const QList<PlotAxis *> &Plot::horizontalPlotAxis() const
+const QList<PlotAxis *> &PlotWidget::horizontalPlotAxis() const
 {
 	return m_horizontalPlotAxis;
 }
 
-const QList<PlotAxis *> &Plot::verticalPlotAxis() const
+const QList<PlotAxis *> &PlotWidget::verticalPlotAxis() const
 {
 	return m_verticalPlotAxis;
+}
+
+QwtPlot *PlotWidget::plot() const
+{
+	return m_plot;
+}
+
+void PlotWidget::replot()
+{
+	m_plot->replot();
 }
 

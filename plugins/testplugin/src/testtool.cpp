@@ -5,7 +5,7 @@
 #include <gui/stylehelper.h>
 #include <QButtonGroup>
 #include <hoverwidget.h>
-#include "plot.h"
+#include "plotwidget.h"
 
 
 using namespace scopy;
@@ -36,7 +36,7 @@ TestTool::TestTool(QWidget *parent)
 	tool->openLeftContainerHelper(false);
 	tool->openRightContainerHelper(false);
 
-	Plot *plot = new Plot(this);
+	PlotWidget *plot = new PlotWidget(this);
 	tool->addWidgetToCentralContainerHelper(plot);
 	plot->replot();
 

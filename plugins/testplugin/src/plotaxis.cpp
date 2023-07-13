@@ -1,18 +1,18 @@
 #include "plotaxis.h"
 
 using namespace scopy;
-PlotAxis::PlotAxis(int position, Plot *p, QObject *parent) :
-      QObject(parent), m_plot(p), m_position(position), m_axisId(QwtAxisId(position))
+PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
+      QObject(parent), m_plotWidget(p), m_plot(p->plot()), m_position(position), m_axisId(QwtAxisId(position))
 {
 	m_min = -1;
 	m_max = 1;
 
 	if(isHorizontal()) {
 		m_divs = 16.0;
-		m_id = m_plot->horizontalPlotAxis().count();
+		m_id = m_plotWidget->horizontalPlotAxis().count();
 	} else {
 		m_divs = 10;
-		m_id = m_plot->verticalPlotAxis().count();
+		m_id = m_plotWidget->verticalPlotAxis().count();
 	}
 
 	m_axisId = QwtAxisId(m_position, m_id);

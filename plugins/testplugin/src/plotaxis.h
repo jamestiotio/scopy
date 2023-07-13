@@ -3,7 +3,7 @@
 
 #include "scopy-testplugin_export.h"
 #include <QwtScaleEngine>
-#include "plot.h"
+#include "plotwidget.h"
 #include <DisplayPlot.h>
 #include "osc_scale_engine.h"
 
@@ -11,12 +11,13 @@ namespace scopy {
 class SCOPY_TESTPLUGIN_EXPORT PlotAxis : public QObject {
 	Q_OBJECT
 public:
-	PlotAxis(int position, Plot *p, QObject *parent = nullptr);
+	PlotAxis(int position, PlotWidget *p, QObject *parent = nullptr);
 	~PlotAxis() {}
 
 	int position();
 	bool isHorizontal();
 	bool isVertical();
+	QwtPlot* plot();
 	void setDivs(double);
 	void setInterval(double min, double max);
 
@@ -29,7 +30,8 @@ public Q_SLOTS:
 
 private:
 	QwtAxisId m_axisId;
-	Plot *m_plot;
+	PlotWidget *m_plotWidget;
+	QwtPlot *m_plot;
 	int m_position;
 	OscScaleDraw *m_xScaleDraw;
 	OscScaleEngine *m_xScaleEngine;

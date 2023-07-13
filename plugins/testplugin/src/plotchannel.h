@@ -6,11 +6,11 @@
 
 namespace scopy {
 class PlotAxis;
-class Plot;
+class PlotWidget;
 class PlotChannel : public QObject {
 	Q_OBJECT
 public:
-	PlotChannel(QString name, QPen pen, Plot *plot, QObject *parent = nullptr);
+	PlotChannel(QString name, QPen pen, PlotWidget *plot, QObject *parent = nullptr);
 	~PlotChannel();
 
 	QwtPlotCurve *curve() const;
@@ -24,6 +24,7 @@ public Q_SLOTS:
 private:
 	PlotAxis *x_axis, *y_axis;
 	QwtPlotCurve *m_curve;
+	PlotWidget *m_plotWidget;
 	QwtPlot *m_plot;
 	float *m_data;
 };

@@ -1,13 +1,14 @@
 #include "plotchannel.h"
 #include <QPen>
-#include "plot.h"
+#include "plotwidget.h"
 #include "plotaxis.h"
 
 using namespace scopy;
 
-PlotChannel::PlotChannel(QString name, QPen pen, Plot *plot, QObject *parent)
+PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, QObject *parent)
     : QObject(parent),
-      m_plot(plot)
+      m_plotWidget(plot),
+      m_plot(m_plotWidget->plot())
 {
 	m_curve = new QwtPlotCurve(name);
 
