@@ -1,4 +1,5 @@
 #include "plotaxis.h"
+#include <QwtPlotLayout>
 
 using namespace scopy;
 PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
@@ -6,26 +7,58 @@ PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
 {
 	m_min = -1;
 	m_max = 1;
+	m_divs = (isHorizontal()) ? 16.0 : 10.0;
 
-	if(isHorizontal()) {
-		m_divs = 16.0;
-		m_id = m_plotWidget->horizontalPlotAxis().count();
-	} else {
-		m_divs = 10;
-		m_id = m_plotWidget->verticalPlotAxis().count();
-	}
+	// add Zoomer
 
+	// bufferpreviewer - part of plot
+	// cursors - part of plot (?)
+
+	// setRawSamples
+	// - how to compute X axis ?
+
+	// measurements
+	// histo/X-Y
+	// acquisition metadata
+	// print
+
+	m_id = m_plotWidget->plotAxis(m_position).count();
 	m_axisId = QwtAxisId(m_position, m_id);
-
-	m_xScaleDraw = new OscScaleDraw(new MetricPrefixFormatter(),"");    // set Formatter (?)
-	m_plot->setAxisScaleDraw(m_axisId,m_xScaleDraw);
-
-	m_xScaleEngine = new OscScaleEngine();
-	m_plot->setAxisScaleEngine(m_axisId, (QwtScaleEngine *)m_xScaleEngine);
+	m_plot->setAxesCount(position, m_id + 1);
 
 	updateAxisScale();
-	setVisible(false);
 
+	// move this outside (?)
+	m_scaleDraw = new OscScaleDraw(new MetricPrefixFormatter(),"");
+	//	m_scaleDraw->setColor(QColor("red"));
+	m_plot->setAxisScaleDraw(m_axisId,m_scaleDraw);
+
+	m_scaleEngine = new OscScaleEngine();
+	m_plot->setAxisScaleEngine(m_axisId, (QwtScaleEngine *)m_scaleEngine);
+
+	m_plotWidget->addPlotAxis(this);
+
+	setupAxisScale();
+	setVisible(false);
+}
+
+void PlotAxis::setupAxisScale() {
+	QwtScaleDraw::Alignment scale =
+		static_cast<QwtScaleDraw::Alignment>(m_position);
+	auto scaleItem = new EdgelessPlotScaleItem(scale);
+
+	scaleItem->scaleDraw()->setAlignment(scale);
+	scaleItem->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Backbone, false);
+	scaleItem->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
+	scaleItem->setFont(m_plot->axisWidget(0)->font());
+
+	QPalette palette = scaleItem->palette();
+	palette.setBrush(QPalette::WindowText, QColor(0x6E6E6F));
+	palette.setBrush(QPalette::Text, QColor(0x6E6E6F));
+	scaleItem->setPalette(palette);
+	scaleItem->setBorderDistance(0);
+	scaleItem->attach(m_plot);
+	scaleItem->setZ(200);
 }
 
 int PlotAxis::position()

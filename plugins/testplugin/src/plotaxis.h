@@ -6,7 +6,7 @@
 #include "plotwidget.h"
 #include <DisplayPlot.h>
 #include "osc_scale_engine.h"
-#include "plotaxisoffsethandle.h"
+#include "plotaxishandle.h"
 
 namespace scopy {
 class SCOPY_TESTPLUGIN_EXPORT PlotAxis : public QObject {
@@ -32,21 +32,20 @@ public Q_SLOTS:
 	void updateAxisScale();
 
 private:
-	void addHandle();
-private:
 	QwtAxisId m_axisId;
 	PlotWidget *m_plotWidget;
 	QwtPlot *m_plot;
 	int m_position;
-	OscScaleDraw *m_xScaleDraw;
-	OscScaleEngine *m_xScaleEngine;
+	OscScaleDraw *m_scaleDraw;
+	OscScaleEngine *m_scaleEngine;
 
-	PlotAxisOffsetHandle *offsetHandle;
+	PlotAxisHandle *offsetHandle;
 	int m_id;
 	double m_divs;
 	double m_min;
 	double m_max;
 
+	void setupAxisScale();
 };
 }
 #endif // PLOTAXIS_H

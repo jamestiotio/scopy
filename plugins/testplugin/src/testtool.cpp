@@ -54,6 +54,8 @@ TestTool::TestTool(QWidget *parent)
 	channels->checkBox()->setVisible(false);
 	channels->setChecked(false);
 
+	QButtonGroup *channelButtonGroup = new QButtonGroup(this);
+
 	MenuControlButton *ch1 = new MenuControlButton(this);
 	ch1->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 	ch1->setName("Channel 1");
@@ -61,13 +63,15 @@ TestTool::TestTool(QWidget *parent)
 	ch1->button()->setVisible(false);
 	ch1->checkBox()->setChecked(true);
 	ch1->setChecked(true);
+	channelButtonGroup->addButton(ch1);
 
-	auto *ch1PlotAxis = plot->verticalPlotAxis()[0];// new PlotAxis(QwtAxis::YLeft, plot);
-//	plot->addPlotAxis(ch1PlotAxis);
-	PlotChannel *ch1_plotch = new PlotChannel("Channel1", QPen(QColor(StyleHelper::getColor("CH1")), 1), plot, plot->horizontalPlotAxis()[0], ch1PlotAxis, this);
-	plot->addPlotAxisHandle(new PlotAxisOffsetHandle(StyleHelper::getColor("CH1"),ch1PlotAxis,plot,this));
+	auto *ch1PlotAxis = new PlotAxis(QwtAxis::YLeft, plot);
+	PlotChannel *ch1_plotch = new PlotChannel("Channel1", QPen(QColor(StyleHelper::getColor("CH1")), 1), plot, plot->xAxis(), ch1PlotAxis, this);
+	ch1_plotch->setHandle(new PlotAxisHandle(QPen(QColor(StyleHelper::getColor("CH1")),1),ch1PlotAxis,plot,this));
+	plot->addPlotAxisHandle(ch1_plotch->handle());
 	connect(ch1->checkBox(),&QCheckBox::toggled, ch1_plotch, &PlotChannel::setEnabled);
 	connect(ch1->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
+	connect(ch1, &QAbstractButton::toggled, this, [=](){plot->selectChannel(ch1_plotch);});
 	ch1_plotch->curve()->setSamples(vals,4);
 
 
@@ -75,14 +79,15 @@ TestTool::TestTool(QWidget *parent)
 	ch2->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 	ch2->setName("Channel 2");
 	ch2->setColor(StyleHelper::getColor("CH2"));
+	channelButtonGroup->addButton(ch2);
 
-	auto *ch2PlotAxis = plot->verticalPlotAxis()[0];//new PlotAxis(QwtAxis::YLeft, plot);
-	plot->addPlotAxis(ch2PlotAxis);
-	PlotChannel *ch2_plotch = new PlotChannel("Channel2", QPen(QColor(StyleHelper::getColor("CH2")), 1), plot, plot->horizontalPlotAxis()[0], ch2PlotAxis, this);
-	plot->addPlotAxisHandle(new PlotAxisOffsetHandle(StyleHelper::getColor("CH2"),ch2PlotAxis,plot,this));
-
+	auto *ch2PlotAxis = new PlotAxis(QwtAxis::YLeft, plot);
+	PlotChannel *ch2_plotch = new PlotChannel("Channel2", QPen(QColor(StyleHelper::getColor("CH2")), 1), plot, plot->xAxis(), ch2PlotAxis, this);
+	ch2_plotch->setHandle(new PlotAxisHandle(QPen(QColor(StyleHelper::getColor("CH2")), 1),ch2PlotAxis, plot, this));
+	plot->addPlotAxisHandle(ch2_plotch->handle());
 	connect(ch2->checkBox(),&QCheckBox::toggled, ch2_plotch, &PlotChannel::setEnabled);
 	connect(ch2->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
+	connect(ch2, &QAbstractButton::toggled, this, [=](){plot->selectChannel(ch2_plotch);});
 	ch2_plotch->curve()->setSamples(vals2,4);
 
 	MenuControlButton *cursor = new MenuControlButton(this);

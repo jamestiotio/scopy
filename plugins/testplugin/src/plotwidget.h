@@ -8,30 +8,32 @@
 #include <symbol_controller.h>
 #include "handles_area.hpp"
 #include <QGridLayout>
-#include "plotaxisoffsethandle.h"
+#include "plotaxishandle.h"
+#include <QwtPlotZoomer>
 
 namespace scopy {
 class PlotAxis;
-class PlotAxisOffsetHandle;
+class PlotAxisHandle;
 
 class SCOPY_TESTPLUGIN_EXPORT PlotWidget : public QWidget {
 	Q_OBJECT
 public:
-	PlotWidget(QWidget *parent = nullptr); // add handleArea, connect handle to SetValue() add ChannelHandles (/w axis), add Zoomer, add cursorHandles
+	PlotWidget(QWidget *parent = nullptr);
 	~PlotWidget();
 
 	void addPlotChannel(PlotChannel *ch);
 	void removePlotChannel(PlotChannel *ch);
 
+	QList<PlotAxis *> &plotAxis(int position);
+	PlotAxis* xAxis();
+
 	void addPlotAxis(PlotAxis *ax);
-	void removePlotAxis(PlotAxis *ax);
+	// void removePlotAxis(PlotAxis *ax);  - not supported by Qwt
 
 	bool getDisplayGraticule() const;
 	void setDisplayGraticule(bool newDisplayGraticule);
 	bool eventFilter(QObject *object, QEvent *event) override;
 
-	const QList<PlotAxis *> &horizontalPlotAxis() const;
-	const QList<PlotAxis *> &verticalPlotAxis() const;
 	QwtPlot *plot() const;
 	SymbolController *symbolCtrl() const;
 
@@ -40,10 +42,14 @@ public:
 	VertHandlesArea *rightHandlesArea() const;
 	VertHandlesArea *leftHandlesArea() const;
 
-	void addPlotAxisHandle(PlotAxisOffsetHandle *ax);
-	void removePlotAxisHandle(PlotAxisOffsetHandle *ax);
+	void addPlotAxisHandle(PlotAxisHandle *ax);
+	void removePlotAxisHandle(PlotAxisHandle *ax);
+
+	PlotChannel *selectedChannel() const;
+
 public Q_SLOTS:
 	void replot();
+	void selectChannel(PlotChannel*);
 
 Q_SIGNALS:
 	void canvasSizeChanged();
@@ -56,18 +62,20 @@ Q_SIGNALS:
 private:
 
 	QwtPlot *m_plot;
+//	QwtPlotZoomer *m_zoomer;
 	QGridLayout *m_layout;
+
 	QList<PlotChannel*> m_plotChannels;
 	QList<QwtPlotScaleItem*> m_scaleItems;
-	QList<PlotAxis*> m_horizontalPlotAxis;
-	QList<PlotAxis*> m_verticalPlotAxis;
-	QList<PlotAxisOffsetHandle*> m_horizontalPlotAxisHandles;
-	QList<PlotAxisOffsetHandle*> m_verticalPlotAxisHandles;
+
+	QList<PlotAxis*> m_plotAxis[QwtAxis::AxisPositions];
+	QList<PlotAxisHandle*> m_plotAxisHandles[QwtAxis::AxisPositions];
 
 	bool displayGraticule;
 	Graticule *graticule;
 
 	SymbolController *m_symbolCtrl;
+	PlotChannel* m_selectedChannel;
 
 	/* Adjacent areas */
 	HorizHandlesArea *m_bottomHandlesArea;

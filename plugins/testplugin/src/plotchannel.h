@@ -7,20 +7,28 @@
 namespace scopy {
 class PlotAxis;
 class PlotWidget;
+class PlotAxisHandle;
 class PlotChannel : public QObject {
 	Q_OBJECT
 public:
-	PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis* x_Axis, PlotAxis *y_Axis, QObject *parent = nullptr);
+	PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis* xAxis, PlotAxis *yAxis, QObject *parent = nullptr);
 	~PlotChannel();
 
 	QwtPlotCurve *curve() const;
+	PlotAxis *xAxis() const;
+	PlotAxis *yAxis() const;
+
+	PlotAxisHandle *handle() const;
+	void setHandle(PlotAxisHandle *newHandle);
+
 public Q_SLOTS:
 	void setEnabled(bool b);
 	void enable();
 	void disable();
 
 private:
-	PlotAxis *x_axis, *y_axis;
+	PlotAxis *m_xAxis, *m_yAxis;
+	PlotAxisHandle *m_handle;
 	QwtPlotCurve *m_curve;
 	QwtSymbol *symbol;
 	PlotWidget *m_plotWidget;

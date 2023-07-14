@@ -5,15 +5,15 @@
 
 using namespace scopy;
 
-PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis *x_axis, PlotAxis *y_axis, QObject *parent)
+PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis *xAxis, PlotAxis *yAxis, QObject *parent)
     : QObject(parent),
       m_plotWidget(plot),
       m_plot(m_plotWidget->plot()),
-      x_axis(x_axis),
-      y_axis(y_axis)
+	  m_xAxis(xAxis),
+	  m_yAxis(yAxis)
 {
 	m_curve = new QwtPlotCurve(name);
-	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
+	m_curve->setAxes(m_xAxis->axisId(), m_yAxis->axisId());
 	m_curve->setStyle( QwtPlotCurve::Lines );
 	m_curve->setPen(pen);
 	m_curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
@@ -29,7 +29,6 @@ PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis *x_a
 
 PlotChannel::~PlotChannel()
 {
-	delete m_curve;
 }
 
 QwtPlotCurve *PlotChannel::curve() const
@@ -58,6 +57,26 @@ void PlotChannel::enable()
 void PlotChannel::disable()
 {
 	setEnabled(false);
+}
+
+PlotAxisHandle *PlotChannel::handle() const
+{
+	return m_handle;
+}
+
+void PlotChannel::setHandle(PlotAxisHandle *newHandle)
+{
+	m_handle = newHandle;
+}
+
+PlotAxis *PlotChannel::yAxis() const
+{
+	return m_yAxis;
+}
+
+PlotAxis *PlotChannel::xAxis() const
+{
+	return m_xAxis;
 }
 
 

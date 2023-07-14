@@ -20,18 +20,21 @@ using namespace scopy;
 
 PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 
+	m_selectedChannel = nullptr;
 	m_plot = new QwtPlot(this);
 	m_layout = new QGridLayout(this);
+	m_layout->setSpacing(0);
+	m_layout->setMargin(0);
 	setLayout(m_layout);
 
 	setupOpenGLCanvas();
 	setupHandlesArea();
+	//	m_zoomer = new OscPlotZoomer(m_plot->canvas(),false);
+	//	m_plot->setMouseTracking(true);
 
-	addPlotAxis(new PlotAxis(QwtAxis::XBottom,this,this));
-	addPlotAxis(new PlotAxis(QwtAxis::YLeft,this,this));
-
-	m_plot->plotLayout()->setAlignCanvasToScales( false );
-	m_plot->axisWidget(QwtAxisId(QwtAxis::YLeft,0))->setMargin(0);
+	auto xAxis = new PlotAxis(QwtAxis::XBottom,this,this);
+	auto yAxis = new PlotAxis(QwtAxis::YLeft,this,this);
+	yAxis->setVisible(false);
 
 	setupAxisScales();
 	setAxisScalesVisible(true);
@@ -42,15 +45,19 @@ PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 	d_grid->setMajorPen(majorPenColor, 1.0, Qt::DashLine);
 	d_grid->attach(m_plot);
 
-//	QwtPlotMarker *d_origin = new QwtPlotMarker();
-//	d_origin->setLineStyle( QwtPlotMarker::Cross );
-//	d_origin->setValue( 0, 0.0 );
-//	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
-//	d_origin->attach( m_plot );
+	//	QwtPlotMarker *d_origin = new QwtPlotMarker();
+	//	d_origin->setLineStyle( QwtPlotMarker::Cross );
+	//	d_origin->setValue( 0, 0.0 );
+	//	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
+	//	d_origin->attach( m_plot );
 
 	graticule = new Graticule(m_plot);
 	connect(this, SIGNAL(canvasSizeChanged()),graticule,SLOT(onCanvasSizeChanged()));
 	setDisplayGraticule(false);
+
+	m_plot->plotLayout()->setAlignCanvasToScales(true);
+	m_plot->plotLayout()->setCanvasMargin(0);
+	m_plot->plotLayout()->setSpacing(0);
 
 }
 
@@ -63,10 +70,12 @@ void PlotWidget::setupHandlesArea() {
 	m_topHandlesArea = new HorizHandlesArea(m_plot->canvas());
 	m_leftHandlesArea = new VertHandlesArea(m_plot->canvas());
 
-	m_bottomHandlesArea->setMinimumHeight(50);
-	m_rightHandlesArea->setMinimumWidth(50);
-	m_topHandlesArea->setMinimumHeight(50);
+	//	m_bottomHandlesArea->setMinimumHeight(50);
+	//	m_rightHandlesArea->setMinimumWidth(50);
+	//	m_topHandlesArea->setMinimumHeight(50);
 	m_leftHandlesArea->setMinimumWidth(50);
+	m_leftHandlesArea->setBottomPadding(0);
+	m_leftHandlesArea->setTopPadding(0); /// Why ?
 
 	m_layout->addWidget(m_bottomHandlesArea,2,1);
 	m_layout->addWidget(m_rightHandlesArea,1,2);
@@ -140,25 +149,19 @@ void PlotWidget::removePlotChannel(PlotChannel *ch)
 	m_plotChannels.removeAll(ch);
 }
 
-void PlotWidget::addPlotAxisHandle(PlotAxisOffsetHandle *ax) {
-//	if(ax->isHorizontal()) {
+void PlotWidget::addPlotAxisHandle(PlotAxisHandle *ax) {
 
-//	} else {
-		m_verticalPlotAxisHandles.append(ax);
-//	}
+	m_plotAxisHandles[ax->axis()->position()].append(ax);
 }
 
-void PlotWidget::removePlotAxisHandle(PlotAxisOffsetHandle *ax) {
-	m_verticalPlotAxisHandles.removeAll(ax);
+void PlotWidget::removePlotAxisHandle(PlotAxisHandle *ax) {
+	m_plotAxisHandles[ax->axis()->position()].removeAll(ax);
 }
 
 
 void PlotWidget::addPlotAxis(PlotAxis *ax)
 {
-	if(ax->isHorizontal())
-		m_horizontalPlotAxis.append(ax);
-	else
-		m_verticalPlotAxis.append(ax);
+	m_plotAxis[ax->position()].append(ax);
 }
 
 bool PlotWidget::getDisplayGraticule() const
@@ -213,14 +216,12 @@ bool PlotWidget::eventFilter(QObject *object, QEvent *event)
 	return QObject::eventFilter(object, event);
 }
 
-const QList<PlotAxis *> &PlotWidget::horizontalPlotAxis() const
-{
-	return m_horizontalPlotAxis;
+QList<PlotAxis *> &PlotWidget::plotAxis(int position) {
+	return m_plotAxis[position];
 }
 
-const QList<PlotAxis *> &PlotWidget::verticalPlotAxis() const
-{
-	return m_verticalPlotAxis;
+PlotAxis *PlotWidget::xAxis() {
+	return m_plotAxis[QwtAxis::XBottom][0];
 }
 
 QwtPlot *PlotWidget::plot() const
@@ -231,6 +232,34 @@ QwtPlot *PlotWidget::plot() const
 void PlotWidget::replot()
 {
 	m_plot->replot();
+}
+
+void PlotWidget::selectChannel(PlotChannel *ch)
+{
+	if(m_selectedChannel != nullptr) {
+		m_selectedChannel->yAxis()->setVisible(false);
+	}
+	m_selectedChannel = ch;
+
+//	m_zoomer->setAxes(m_selectedChannel->xAxis()->axisId(), m_selectedChannel->yAxis()->axisId());
+	m_selectedChannel->xAxis()->setVisible(false);
+	m_selectedChannel->yAxis()->setVisible(false);
+
+	if(m_selectedChannel->curve()) {
+		m_selectedChannel->curve()->detach();
+		m_selectedChannel->curve()->attach(m_plot);
+	}
+
+	if(m_selectedChannel->handle()) {
+		m_selectedChannel->handle()->offsetHdl()->raise();
+	}
+
+	// bring handle to front - tied to
+}
+
+PlotChannel *PlotWidget::selectedChannel() const
+{
+	return m_selectedChannel;
 }
 
 VertHandlesArea *PlotWidget::leftHandlesArea() const
