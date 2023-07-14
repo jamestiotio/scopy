@@ -15,8 +15,6 @@ class SCOPY_TESTPLUGIN_EXPORT TestTool : public QWidget
 {
 public:
 	TestTool(QWidget *parent = nullptr);
-
-	void setupPlot();
 private:
 	ToolTemplate *tool;
 	QPushButton *btn1, *btn2, *btn3;

@@ -7,9 +7,13 @@
 #include "scopy-testplugin_export.h"
 #include <symbol_controller.h>
 #include "handles_area.hpp"
+#include <QGridLayout>
+#include "plotaxisoffsethandle.h"
 
 namespace scopy {
 class PlotAxis;
+class PlotAxisOffsetHandle;
+
 class SCOPY_TESTPLUGIN_EXPORT PlotWidget : public QWidget {
 	Q_OBJECT
 public:
@@ -29,6 +33,15 @@ public:
 	const QList<PlotAxis *> &horizontalPlotAxis() const;
 	const QList<PlotAxis *> &verticalPlotAxis() const;
 	QwtPlot *plot() const;
+	SymbolController *symbolCtrl() const;
+
+	HorizHandlesArea *bottomHandlesArea() const;
+	HorizHandlesArea *topHandlesArea() const;
+	VertHandlesArea *rightHandlesArea() const;
+	VertHandlesArea *leftHandlesArea() const;
+
+	void addPlotAxisHandle(PlotAxisOffsetHandle *ax);
+	void removePlotAxisHandle(PlotAxisOffsetHandle *ax);
 public Q_SLOTS:
 	void replot();
 
@@ -43,25 +56,29 @@ Q_SIGNALS:
 private:
 
 	QwtPlot *m_plot;
+	QGridLayout *m_layout;
 	QList<PlotChannel*> m_plotChannels;
 	QList<QwtPlotScaleItem*> m_scaleItems;
 	QList<PlotAxis*> m_horizontalPlotAxis;
 	QList<PlotAxis*> m_verticalPlotAxis;
+	QList<PlotAxisOffsetHandle*> m_horizontalPlotAxisHandles;
+	QList<PlotAxisOffsetHandle*> m_verticalPlotAxisHandles;
 
 	bool displayGraticule;
 	Graticule *graticule;
 
-	SymbolController *d_symbolCtrl;
+	SymbolController *m_symbolCtrl;
 
 	/* Adjacent areas */
-	HorizHandlesArea *d_bottomHandlesArea;
-	VertHandlesArea *d_rightHandlesArea;
-	HorizHandlesArea *d_topHandlesArea;
-	VertHandlesArea *d_leftHandlesArea;
+	HorizHandlesArea *m_bottomHandlesArea;
+	VertHandlesArea *m_rightHandlesArea;
+	HorizHandlesArea *m_topHandlesArea;
+	VertHandlesArea *m_leftHandlesArea;
 
 	void setAxisScalesVisible(bool visible);
 	void setupAxisScales();
 	void setupOpenGLCanvas();
+	void setupHandlesArea();
 };
 
 

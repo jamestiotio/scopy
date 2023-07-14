@@ -10,12 +10,10 @@ class PlotWidget;
 class PlotChannel : public QObject {
 	Q_OBJECT
 public:
-	PlotChannel(QString name, QPen pen, PlotWidget *plot, QObject *parent = nullptr);
+	PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis* x_Axis, PlotAxis *y_Axis, QObject *parent = nullptr);
 	~PlotChannel();
 
 	QwtPlotCurve *curve() const;
-	void setAxes(PlotAxis *x_axis, PlotAxis *y_axis);
-
 public Q_SLOTS:
 	void setEnabled(bool b);
 	void enable();
@@ -24,6 +22,7 @@ public Q_SLOTS:
 private:
 	PlotAxis *x_axis, *y_axis;
 	QwtPlotCurve *m_curve;
+	QwtSymbol *symbol;
 	PlotWidget *m_plotWidget;
 	QwtPlot *m_plot;
 	float *m_data;

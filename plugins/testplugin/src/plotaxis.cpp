@@ -22,8 +22,9 @@ PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
 
 	m_xScaleEngine = new OscScaleEngine();
 	m_plot->setAxisScaleEngine(m_axisId, (QwtScaleEngine *)m_xScaleEngine);
+
 	updateAxisScale();
-	setVisible(true);
+	setVisible(false);
 
 }
 
@@ -61,6 +62,16 @@ void PlotAxis::setVisible(bool val)
 
 void PlotAxis::updateAxisScale() {
 	m_plot->setAxisScale(m_axisId, m_min, m_max, (m_max - m_min)/m_divs); // set Divs, limits
+}
+
+double PlotAxis::max() const
+{
+	return m_max;
+}
+
+double PlotAxis::min() const
+{
+	return m_min;
 }
 
 const QwtAxisId &PlotAxis::axisId() const

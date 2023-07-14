@@ -21,7 +21,11 @@ using namespace scopy;
 PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 
 	m_plot = new QwtPlot(this);
+	m_layout = new QGridLayout(this);
+	setLayout(m_layout);
+
 	setupOpenGLCanvas();
+	setupHandlesArea();
 
 	addPlotAxis(new PlotAxis(QwtAxis::XBottom,this,this));
 	addPlotAxis(new PlotAxis(QwtAxis::YLeft,this,this));
@@ -38,32 +42,37 @@ PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 	d_grid->setMajorPen(majorPenColor, 1.0, Qt::DashLine);
 	d_grid->attach(m_plot);
 
-	QwtPlotMarker *d_origin = new QwtPlotMarker();
-	d_origin->setLineStyle( QwtPlotMarker::Cross );
-	d_origin->setValue( 0, 0.0 );
-	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
-	d_origin->attach( m_plot );
+//	QwtPlotMarker *d_origin = new QwtPlotMarker();
+//	d_origin->setLineStyle( QwtPlotMarker::Cross );
+//	d_origin->setValue( 0, 0.0 );
+//	d_origin->setLinePen( Qt::gray, 0.0, Qt::DashLine );
+//	d_origin->attach( m_plot );
 
 	graticule = new Graticule(m_plot);
 	connect(this, SIGNAL(canvasSizeChanged()),graticule,SLOT(onCanvasSizeChanged()));
 	setDisplayGraticule(false);
 
+}
 
-	///////////////////
-	d_symbolCtrl = new SymbolController(m_plot);
+void PlotWidget::setupHandlesArea() {
+	m_symbolCtrl = new SymbolController(m_plot);
 
 	/* Adjacent areas */
-	d_bottomHandlesArea = new HorizHandlesArea(m_plot->canvas());
-	d_rightHandlesArea = new VertHandlesArea(m_plot->canvas());
-	d_topHandlesArea = new HorizHandlesArea(m_plot->canvas());
-	d_leftHandlesArea = new VertHandlesArea(m_plot->canvas());
+	m_bottomHandlesArea = new HorizHandlesArea(m_plot->canvas());
+	m_rightHandlesArea = new VertHandlesArea(m_plot->canvas());
+	m_topHandlesArea = new HorizHandlesArea(m_plot->canvas());
+	m_leftHandlesArea = new VertHandlesArea(m_plot->canvas());
 
-	d_bottomHandlesArea->setMinimumHeight(50);
-	d_rightHandlesArea->setMinimumWidth(50);
-	//	d_bottomHandlesArea->setLargestChildWidth(60);
-	//	d_rightHandlesArea->setLargestChildHeight(60);
-	d_rightHandlesArea->setMinimumHeight(m_plot->minimumHeight());
-	d_rightHandlesArea->setBottomPadding(50);
+	m_bottomHandlesArea->setMinimumHeight(50);
+	m_rightHandlesArea->setMinimumWidth(50);
+	m_topHandlesArea->setMinimumHeight(50);
+	m_leftHandlesArea->setMinimumWidth(50);
+
+	m_layout->addWidget(m_bottomHandlesArea,2,1);
+	m_layout->addWidget(m_rightHandlesArea,1,2);
+	m_layout->addWidget(m_leftHandlesArea,1,0);
+	m_layout->addWidget(m_topHandlesArea,0,1);
+	m_layout->addWidget(m_plot,1,1);
 }
 
 PlotWidget::~PlotWidget() {
@@ -130,6 +139,19 @@ void PlotWidget::removePlotChannel(PlotChannel *ch)
 {
 	m_plotChannels.removeAll(ch);
 }
+
+void PlotWidget::addPlotAxisHandle(PlotAxisOffsetHandle *ax) {
+//	if(ax->isHorizontal()) {
+
+//	} else {
+		m_verticalPlotAxisHandles.append(ax);
+//	}
+}
+
+void PlotWidget::removePlotAxisHandle(PlotAxisOffsetHandle *ax) {
+	m_verticalPlotAxisHandles.removeAll(ax);
+}
+
 
 void PlotWidget::addPlotAxis(PlotAxis *ax)
 {
@@ -209,5 +231,30 @@ QwtPlot *PlotWidget::plot() const
 void PlotWidget::replot()
 {
 	m_plot->replot();
+}
+
+VertHandlesArea *PlotWidget::leftHandlesArea() const
+{
+	return m_leftHandlesArea;
+}
+
+VertHandlesArea *PlotWidget::rightHandlesArea() const
+{
+	return m_rightHandlesArea;
+}
+
+HorizHandlesArea *PlotWidget::topHandlesArea() const
+{
+	return m_topHandlesArea;
+}
+
+HorizHandlesArea *PlotWidget::bottomHandlesArea() const
+{
+	return m_bottomHandlesArea;
+}
+
+SymbolController *PlotWidget::symbolCtrl() const
+{
+	return m_symbolCtrl;
 }
 

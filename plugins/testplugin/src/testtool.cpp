@@ -6,6 +6,7 @@
 #include <QButtonGroup>
 #include <hoverwidget.h>
 #include "plotwidget.h"
+#include "plotaxis.h"
 
 
 using namespace scopy;
@@ -60,7 +61,11 @@ TestTool::TestTool(QWidget *parent)
 	ch1->button()->setVisible(false);
 	ch1->checkBox()->setChecked(true);
 	ch1->setChecked(true);
-	PlotChannel *ch1_plotch = new PlotChannel("Channel1", QPen(QColor(StyleHelper::getColor("CH1")), 1), plot, this);
+
+	auto *ch1PlotAxis = plot->verticalPlotAxis()[0];// new PlotAxis(QwtAxis::YLeft, plot);
+//	plot->addPlotAxis(ch1PlotAxis);
+	PlotChannel *ch1_plotch = new PlotChannel("Channel1", QPen(QColor(StyleHelper::getColor("CH1")), 1), plot, plot->horizontalPlotAxis()[0], ch1PlotAxis, this);
+	plot->addPlotAxisHandle(new PlotAxisOffsetHandle(StyleHelper::getColor("CH1"),ch1PlotAxis,plot,this));
 	connect(ch1->checkBox(),&QCheckBox::toggled, ch1_plotch, &PlotChannel::setEnabled);
 	connect(ch1->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
 	ch1_plotch->curve()->setSamples(vals,4);
@@ -70,7 +75,12 @@ TestTool::TestTool(QWidget *parent)
 	ch2->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 	ch2->setName("Channel 2");
 	ch2->setColor(StyleHelper::getColor("CH2"));
-	PlotChannel *ch2_plotch = new PlotChannel("Channel2", QPen(QColor(StyleHelper::getColor("CH2")), 1), plot, this);
+
+	auto *ch2PlotAxis = plot->verticalPlotAxis()[0];//new PlotAxis(QwtAxis::YLeft, plot);
+	plot->addPlotAxis(ch2PlotAxis);
+	PlotChannel *ch2_plotch = new PlotChannel("Channel2", QPen(QColor(StyleHelper::getColor("CH2")), 1), plot, plot->horizontalPlotAxis()[0], ch2PlotAxis, this);
+	plot->addPlotAxisHandle(new PlotAxisOffsetHandle(StyleHelper::getColor("CH2"),ch2PlotAxis,plot,this));
+
 	connect(ch2->checkBox(),&QCheckBox::toggled, ch2_plotch, &PlotChannel::setEnabled);
 	connect(ch2->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
 	ch2_plotch->curve()->setSamples(vals2,4);
@@ -155,11 +165,3 @@ TestTool::TestTool(QWidget *parent)
 	});
 
 }
-
-
-void TestTool::setupPlot() {
-
-
-}
-
-

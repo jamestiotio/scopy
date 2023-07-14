@@ -125,7 +125,7 @@ ScopyMainWindow::ScopyMainWindow(QWidget *parent)
 
 	auto d = dm->getDevice(id);
 	d->connectDev();
-	auto tool_id = dynamic_cast<DeviceImpl*>(d)->plugins()[0]->toolList()[0]->uuid();
+	auto tool_id = dynamic_cast<DeviceImpl*>(d)->plugins()[0]->toolList()[1]->uuid();
 	Q_EMIT tb->requestTool(tool_id);
 #endif
 	connect(tb, SIGNAL(requestSave()), this, SLOT(save()));

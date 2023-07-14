@@ -5,17 +5,24 @@
 
 using namespace scopy;
 
-PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, QObject *parent)
+PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis *x_axis, PlotAxis *y_axis, QObject *parent)
     : QObject(parent),
       m_plotWidget(plot),
-      m_plot(m_plotWidget->plot())
+      m_plot(m_plotWidget->plot()),
+      x_axis(x_axis),
+      y_axis(y_axis)
 {
 	m_curve = new QwtPlotCurve(name);
-
+	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
 	m_curve->setStyle( QwtPlotCurve::Lines );
 	m_curve->setPen(pen);
 	m_curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
 	m_curve->setPaintAttribute( QwtPlotCurve::ClipPolygons, false );
+
+	m_curve->setItemAttribute(QwtPlotItem::Legend, true);
+	symbol = new QwtSymbol(QwtSymbol::NoSymbol, QBrush(pen.color()),
+					  QPen(pen.color()), QSize(7,7));
+	m_curve->setSymbol(symbol);
 	// curvefitter (?)
 
 }
@@ -30,10 +37,10 @@ QwtPlotCurve *PlotChannel::curve() const
 	return m_curve;
 }
 
-void PlotChannel::setAxes(PlotAxis *x_axis, PlotAxis *y_axis)
-{
-	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
-}
+//void PlotChannel::setAxes(PlotAxis *x_axis, PlotAxis *y_axis)
+//{
+//	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
+//}
 
 void PlotChannel::setEnabled(bool b)
 {
