@@ -9,6 +9,7 @@
 #include <pluginbase/preferenceshelper.h>
 #include <iioutil/contextprovider.h>
 #include "adcinstrument.h"
+#include "gui/stylehelper.h"
 
 
 
@@ -137,16 +138,14 @@ PlotProxy* ADCPlugin::createRecipe(iio_context *ctx) {
 			scOff->setScale(1);
 
 			sig->setEnabled(true);
-			top->registerSignalPath(sig);			
+			top->registerSignalPath(sig);
 
-			GRTimeChannelAddon *t = new GRTimeChannelAddon(sig, p, this);
+			GRTimeChannelAddon *t = new GRTimeChannelAddon(sig, p, QPen(StyleHelper::getColor("CH"+QString::number(i))), this);
 			t->setDevice(d);
 			recipe->addChannelAddon(t);
 			i++;
 		}
 	}
-
-
 
 	qDebug(CAT_ADCPLUGIN)<<deviceList;
 	qDebug(CAT_ADCPLUGIN)<<devChannelMap;

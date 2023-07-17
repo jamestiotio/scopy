@@ -21,6 +21,7 @@
 #include "pluginbase/messagebroker.h"
 #include "scopy-core_config.h"
 #include <common/scopyconfig.h>
+#include <stylehelper.h>
 
 using namespace scopy;
 
@@ -40,6 +41,8 @@ ScopyMainWindow::ScopyMainWindow(QWidget *parent)
 	ScopyJS::GetInstance();
 	ContextProvider::GetInstance();
 	MessageBroker::GetInstance();
+	StyleHelper::GetInstance()->initColorMap();
+
 	//	auto vc = VersionCache::GetInstance();
 	//	if(vc->cacheOutdated()) {
 	//		vc->updateCache();
@@ -120,12 +123,12 @@ ScopyMainWindow::ScopyMainWindow(QWidget *parent)
 #ifdef SCOPY_DEV_MODE
 //	auto id = dm->createDevice("m2k","ip:127.0.0.1"), false;
 //	auto id = dm->createDevice("iio","ip:10.48.65.163", false);
-//	auto id = dm->createDevice("iio","ip:192.168.2.1", false);
-	auto id = dm->createDevice("test","", false);
+	auto id = dm->createDevice("iio","ip:192.168.2.1", false);
+//	auto id = dm->createDevice("test","", false);
 
 	auto d = dm->getDevice(id);
 	d->connectDev();
-	auto tool_id = dynamic_cast<DeviceImpl*>(d)->plugins()[0]->toolList()[1]->uuid();
+	auto tool_id = dynamic_cast<DeviceImpl*>(d)->plugins()[0]->toolList()[0]->uuid();
 	Q_EMIT tb->requestTool(tool_id);
 #endif
 	connect(tb, SIGNAL(requestSave()), this, SLOT(save()));

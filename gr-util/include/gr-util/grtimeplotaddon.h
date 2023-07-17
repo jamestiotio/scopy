@@ -19,7 +19,7 @@ public:
 
 	QString getName() override;
 	QWidget *getWidget() override;
-	CapturePlot *plot();
+	PlotWidget *plot();
 
 public Q_SLOTS:
 	void enable() override;
@@ -39,8 +39,8 @@ private slots:
 private:
 	QString name;
 	QWidget *widget;
-	CapturePlot *m_plot;
 	GRTopBlock *m_top;
+	PlotWidget *m_plotWidget;
 	QList<scope_sink_f::sptr> sinks;
 };
 }
