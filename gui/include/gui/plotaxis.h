@@ -1,7 +1,7 @@
 #ifndef PLOTAXIS_H
 #define PLOTAXIS_H
 
-#include "scopy-testplugin_export.h"
+#include "scopy-gui_export.h"
 #include <QwtScaleEngine>
 #include "plotwidget.h"
 #include <DisplayPlot.h>
@@ -10,7 +10,7 @@
 #include <QwtPlotZoomer>
 
 namespace scopy {
-class SCOPY_TESTPLUGIN_EXPORT PlotAxis : public QObject {
+class SCOPY_GUI_EXPORT PlotAxis : public QObject {
 	Q_OBJECT
 public:
 	PlotAxis(int position, PlotWidget *p, QObject *parent = nullptr);

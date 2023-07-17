@@ -3,11 +3,11 @@
 
 #include "plotwidget.h"
 #include <QWidget>
-#include "gui/plot_line_handle.h"
-#include "scopy-testplugin_export.h"
+#include "plot_line_handle.h"
+#include "scopy-gui_export.h"
 
 namespace scopy {
-class SCOPY_TESTPLUGIN_EXPORT PlotAxisHandle : public QObject
+class SCOPY_GUI_EXPORT PlotAxisHandle : public QObject
 {
 	Q_OBJECT
 public:

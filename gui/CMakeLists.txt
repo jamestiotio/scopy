@@ -82,6 +82,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}include/${SCOPY_MODULE}/
     scopy-common
+    scopy-pluginbase
     scopysigrok-gui)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/${SCOPY_MODULE} ${QWT_INCLUDE_DIRS})
 
@@ -91,6 +92,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Svg
     ${QWT_LIBRARIES}
     scopy-common
+    scopy-pluginbase
 )
 
 install(TARGETS ${PROJECT_NAME}

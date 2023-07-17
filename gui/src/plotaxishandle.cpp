@@ -1,7 +1,7 @@
 #include "plotaxishandle.h"
 #include "plotaxis.h"
-#include "gui/symbol.h"
-#include "gui/symbol_controller.h"
+#include "symbol.h"
+#include "symbol_controller.h"
 #include <QDebug>
 
 using namespace scopy;

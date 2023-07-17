@@ -4,19 +4,18 @@
 #include "plotchannel.h"
 #include <QWidget>
 #include <graticule.h>
-#include "scopy-testplugin_export.h"
+#include "scopy-gui_export.h"
 #include <symbol_controller.h>
 #include "handles_area.hpp"
 #include <QGridLayout>
-#include "plotaxishandle.h"
 #include <QwtPlotZoomer>
-#include <gui/buffer_previewer.hpp>
+#include <buffer_previewer.hpp>
 
 namespace scopy {
 class PlotAxis;
 class PlotAxisHandle;
 
-class SCOPY_TESTPLUGIN_EXPORT PlotWidget : public QWidget {
+class SCOPY_GUI_EXPORT PlotWidget : public QWidget {
 	Q_OBJECT
 public:
 	PlotWidget(QWidget *parent = nullptr);

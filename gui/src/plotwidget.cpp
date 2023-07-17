@@ -1,13 +1,11 @@
 #include "plotwidget.h"
-#include <gui/BasicPlot.h>
-
-#include <gui/DisplayPlot.h>
+#include <DisplayPlot.h>
 
 #include <QwtPlot>
 #include <QwtPlotCurve>
 #include <QwtPlotLayout>
 #include <QwtPlotSeriesItem>
-#include <gui/customqwtscaledraw.hpp>
+#include <customqwtscaledraw.hpp>
 #include <QMouseEvent>
 #include <osc_scale_engine.h>
 #include <QObject>

@@ -217,7 +217,7 @@ void TestTool::acquireData() {
 	y2Volt.clear();
 	for(int i = 0; i < testDataSize ; i++){
 		y1Volt.push_back(amplitude*sin(2 * 10 * 3.1416 * i / (double)testDataSize + phase));
-		y2Volt.push_back(amplitude*sin(2 * 20 * 3.1416 * i / (double)testDataSize + 2*phase));
+		y2Volt.push_back(amplitude*sin(2 * 17 * 3.1416 * i / (double)testDataSize + 2*phase));
 	}
 	phase++;
 }

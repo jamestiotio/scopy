@@ -3,12 +3,13 @@
 
 #include <QwtPlotCurve>
 #include <QwtPlot>
+#include "scopy-gui_export.h"
 
 namespace scopy {
 class PlotAxis;
 class PlotWidget;
 class PlotAxisHandle;
-class PlotChannel : public QObject {
+class SCOPY_GUI_EXPORT PlotChannel : public QObject {
 	Q_OBJECT
 public:
 	PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis* xAxis, PlotAxis *yAxis, QObject *parent = nullptr);

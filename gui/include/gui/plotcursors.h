@@ -5,13 +5,13 @@
 #include "plotaxis.h"
 #include <QPair>
 #include "symbol_controller.h"
-#include "scopy-testplugin_export.h"
+#include "scopy-gui_export.h"
 #include <QDebug>
 #include <QLabel>
 
 namespace scopy {
 
-class SCOPY_TESTPLUGIN_EXPORT Cursor : public QObject {
+class SCOPY_GUI_EXPORT Cursor : public QObject {
 	Q_OBJECT
 public:
 	Cursor(PlotWidget* p, PlotAxis *ax, QPen pen);
@@ -35,7 +35,7 @@ protected:
 
 };
 
-class SCOPY_TESTPLUGIN_EXPORT VCursor : public Cursor {
+class SCOPY_GUI_EXPORT VCursor : public Cursor {
 public:
 	explicit VCursor(PlotWidget* p, PlotAxis *ax, bool right = true, QPen pen = QPen(QColor(155, 155, 155), 1, Qt::DashLine));
 	~VCursor();;
@@ -43,7 +43,7 @@ public:
 	double computePosition(int pos);
 };
 
-class SCOPY_TESTPLUGIN_EXPORT HCursor : public Cursor {
+class SCOPY_GUI_EXPORT HCursor : public Cursor {
 public:
 	explicit HCursor(PlotWidget* p, PlotAxis *ax, bool bottom = true, QPen pen = QPen(QColor(155, 155, 155), 1, Qt::DashLine));
 	~HCursor();
@@ -53,7 +53,7 @@ public:
 
 };
 
-class SCOPY_TESTPLUGIN_EXPORT PlotCursors : public QObject
+class SCOPY_GUI_EXPORT PlotCursors : public QObject
 {
 	Q_OBJECT
 public:
@@ -87,7 +87,7 @@ private:
 	QPair<Cursor*, Cursor*> m_hCursors;
 };
 
-class SCOPY_TESTPLUGIN_EXPORT PlotCursorReadouts : public QWidget
+class SCOPY_GUI_EXPORT PlotCursorReadouts : public QWidget
 {
 	Q_OBJECT
 public:
