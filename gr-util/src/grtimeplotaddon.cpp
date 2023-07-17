@@ -6,6 +6,7 @@
 #include <grlog.h>
 #include <gr-gui/scope_sink_f.h>
 #include <gui/plotwidget.h>
+#include "time_sink_f.h"
 
 using namespace scopy;
 using namespace scopy::grutil;
@@ -65,10 +66,15 @@ void GRTimePlotAddon::onAdd() {}
 void GRTimePlotAddon::onRemove() {}
 
 void GRTimePlotAddon::onChannelAdded(ToolAddon *t) {
-
+	auto ch = dynamic_cast<GRTimeChannelAddon*> (t);
+	if(ch)
+		grChannels.append(ch);
 }
 
-void GRTimePlotAddon::onChannelRemoved(ToolAddon *) {
+void GRTimePlotAddon::onChannelRemoved(ToolAddon *t) {
+	auto ch = dynamic_cast<GRTimeChannelAddon*> (t);
+	if(ch)
+		grChannels.removeAll(ch);
 }
 
 void GRTimePlotAddon::connectSignalPaths() {
@@ -80,36 +86,37 @@ void GRTimePlotAddon::connectSignalPaths() {
 		if(!sigpath->name().startsWith(name))
 			continue;
 		sigpaths.append(sigpath);
-
-
 		qInfo()<<"created scope_sink_f with name" << sigpath->name();
 
 	}
 
 
 
+	auto sink = time_sink_f::make(1024,1000,name.toStdString(),sigpaths.count());
 	// create and configure time_sink_f
 	// allocate memory for data to be plotted - could be done by time_sink ?
-	// 	for(int i=0;i<sigpaths.count();i++) {
-	//	QwtCurve[].setRawSamples(data[i]) // just get pointer from time_sink
-	// }
-
-	//auto sink = scope_sink_f::make(1024,1000,name.toStdString(),sigpaths.count(),m_plot);
 
 
 	int i=0;
 	for(auto &sigpath : sigpaths) {
-		//m_top->connect(sigpath->getGrEndPoint(), 0, sink, i);
+	/*	REGISTER SINK !
+	 * GRTimeChannelAddon *time;
+		for(auto gr : grChannels) {
+			if(gr->signalPath() == sigpath) {
+				time = gr;
+				break;
+			}
+		}
+		///time->registerSink();
+		///
+	*/
+		m_top->connect(sigpath->getGrEndPoint(), 0, sink, i);
 		i++;
 	}
 
 	for(int i=0;i<sigpaths.count();i++) {
 
-
 	}
-	// TO DO: Give user the option to make these axes visible
-	//	m_plot->setUsingLeftAxisScales(false);
-
 }
 
 void GRTimePlotAddon::tearDownSignalPaths() {

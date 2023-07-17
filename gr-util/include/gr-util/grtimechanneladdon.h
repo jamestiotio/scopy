@@ -25,7 +25,10 @@ public:
 	void setDevice(GRDeviceAddon *d);
 	GRDeviceAddon* getDevice();
 
+
 	QPen pen() const;
+
+	GRSignalPath *signalPath() const;
 
 public Q_SLOTS:
 	void enable() override;
@@ -38,7 +41,8 @@ public Q_SLOTS:
 	void onChannelRemoved(ToolAddon*) override;
 
 private:
-	GRIIOChannel* m_grch;
+	GRSignalPath *m_signalPath;
+	GRIIOChannel *m_grch;
 	GRTimePlotAddon* m_plotAddon;
 	GRDeviceAddon* m_dev;
 	QPen m_pen;

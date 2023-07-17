@@ -46,27 +46,21 @@
 #include <Python.h>
 #endif
 
-#include "trigger_mode.h"
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
-#include "scopy-adcplugin_export.h"
+#include "scopy-gr-util_export.h"
 
 namespace scopy {
 
-class SCOPY_ADCPLUGIN_EXPORT time_sink_f : virtual public gr::sync_block
+class SCOPY_GR_UTIL_EXPORT time_sink_f : virtual public gr::sync_block
 {
 public:
 	// scopy::time_sink_f::sptr
 	typedef std::shared_ptr<time_sink_f> sptr;
 
-	static sptr make(int size, const std::string &name,
+	static sptr make(int size, double sampleRate, const std::string &name,
 			 int nconnections );
-
-	virtual void set_update_time(double t) = 0;
-	virtual void set_nsamps(const int newsize) = 0;
-
-	virtual int nsamps() const = 0;
 	virtual std::string name() const = 0;
+	virtual void updateData() = 0;
 
 };
 

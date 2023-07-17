@@ -10,6 +10,7 @@
 namespace scopy::grutil {
 using namespace scopy;
 class GRTopBlock;
+class GRTimeChannelAddon;
 
 class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon {
 	Q_OBJECT
@@ -42,6 +43,7 @@ private:
 	GRTopBlock *m_top;
 	PlotWidget *m_plotWidget;
 	QList<scope_sink_f::sptr> sinks;
+	QList<GRTimeChannelAddon*> grChannels;
 };
 }
 

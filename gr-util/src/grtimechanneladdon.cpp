@@ -4,7 +4,7 @@
 using namespace scopy::grutil;
 
 GRTimeChannelAddon::GRTimeChannelAddon(GRSignalPath *path, GRTimePlotAddon *plotAddon, QPen pen, QObject *parent)
-	: QObject(parent), m_plotAddon(plotAddon), m_pen(pen) {
+	: QObject(parent), m_signalPath(path), m_plotAddon(plotAddon), m_pen(pen) {
 	this->m_grch = dynamic_cast<GRIIOChannel*>(path->path()[0]);
 	name = m_grch->getChannelName();
 	widget = new QLabel(name);
@@ -52,6 +52,11 @@ void GRTimeChannelAddon::onRemove() {}
 void GRTimeChannelAddon::onChannelAdded(ToolAddon *) {}
 
 void GRTimeChannelAddon::onChannelRemoved(ToolAddon *) {}
+
+GRSignalPath *GRTimeChannelAddon::signalPath() const
+{
+	return m_signalPath;
+}
 
 QPen GRTimeChannelAddon::pen() const {
 	return m_pen;

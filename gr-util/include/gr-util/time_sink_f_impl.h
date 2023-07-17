@@ -1,24 +1,3 @@
-/* -*- c++ -*- */
-/*
- * Copyright 2012,2014 Free Software Foundation, Inc.
- *
- * This file is part of GNU Radio
- *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
- *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file LICENSE.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
- */
 /*
  * Copyright (c) 2019 Analog Devices Inc.
  *
@@ -42,7 +21,6 @@
 #ifndef TIME_SINK_F_IMPL_H
 #define TIME_SINK_F_IMPL_H
 
-#include <gnuradio/high_res_timer.h>
 #include "time_sink_f.h"
 
 namespace scopy {
@@ -52,34 +30,27 @@ class time_sink_f_impl : public time_sink_f
 private:
 	std::vector <std::deque <float>> m_buffers;
 	std::vector< std::vector<gr::tag_t> > m_tags;
+	std::vector<double> m_time;
+	std::vector<std::vector<float>> m_data;
 
 	int m_size;
-	double d_samp_rate;
+	double m_sampleRate;
 	std::string m_name;
 	int m_nconnections;
 
-
-	gr::high_res_timer_type d_update_time;
-	gr::high_res_timer_type d_last_time;
-
 public:
-	time_sink_f_impl(int size,
-			 const std::string &name,
-			 int nconnections);
+	time_sink_f_impl(int size, double sampleRate, const std::string &name, int nconnections);
 	~time_sink_f_impl();
 
 	bool check_topology(int ninputs, int noutputs);
-
-	void set_update_time(double t);
-	void set_nsamps(const int size);
-
-	int nsamps() const;
 	std::string name() const;
 
-
+	void updateData();
+	const std::vector<double> &time() const;
+	const std::vector<std::vector<float>> &data() const;
 	int work(int noutput_items,
 		 gr_vector_const_void_star &input_items,
-		 gr_vector_void_star &output_items);
+			 gr_vector_void_star &output_items);
 };
 
 } /* namespace scopy */
