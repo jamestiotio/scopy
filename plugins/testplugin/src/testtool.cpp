@@ -7,18 +7,16 @@
 #include <hoverwidget.h>
 #include "plotwidget.h"
 #include "plotaxis.h"
+#include "plotcursors.h"
 
 
 using namespace scopy;
 
 QMap<QString, QColor> colorMap;
 
-float vals[4] = {0.1,0.2,0.3,0.4};
-float vals2[4] = {0.4,0.5,0.6,0.7};
-
-
 TestTool::TestTool(QWidget *parent)
 {
+	initData();
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	QHBoxLayout *lay = new QHBoxLayout(this);
 	setLayout(lay);
@@ -39,6 +37,7 @@ TestTool::TestTool(QWidget *parent)
 
 	PlotWidget *plot = new PlotWidget(this);
 	tool->addWidgetToCentralContainerHelper(plot);
+	plot->xAxis()->setInterval(0,1);
 	plot->replot();
 
 	GearBtn *btn5 = new GearBtn(this);
@@ -46,6 +45,18 @@ TestTool::TestTool(QWidget *parent)
 	InfoBtn *infoBtn = new InfoBtn(this);
 	SingleShotBtn *singleBtn = new SingleShotBtn(this);
 	PrintBtn *printBtn = new PrintBtn(this);
+
+	QTimer *dataRefreshTimer = new QTimer(this);
+	dataRefreshTimer->setInterval(10);
+	connect(runBtn,&QPushButton::toggled, this, [=](bool b) {
+		if(b) {
+			dataRefreshTimer->start();
+		} else {
+			dataRefreshTimer->stop();
+		}
+	});
+	connect(dataRefreshTimer,&QTimer::timeout, this, &TestTool::acquireData);
+	connect(dataRefreshTimer,&QTimer::timeout, plot, &PlotWidget::replot);
 
 	MenuControlButton *channels = new MenuControlButton(this);
 	channels->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
@@ -69,10 +80,11 @@ TestTool::TestTool(QWidget *parent)
 	PlotChannel *ch1_plotch = new PlotChannel("Channel1", QPen(QColor(StyleHelper::getColor("CH1")), 1), plot, plot->xAxis(), ch1PlotAxis, this);
 	ch1_plotch->setHandle(new PlotAxisHandle(QPen(QColor(StyleHelper::getColor("CH1")),1),ch1PlotAxis,plot,this));
 	plot->addPlotAxisHandle(ch1_plotch->handle());
+
 	connect(ch1->checkBox(),&QCheckBox::toggled, ch1_plotch, &PlotChannel::setEnabled);
 	connect(ch1->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
 	connect(ch1, &QAbstractButton::toggled, this, [=](){plot->selectChannel(ch1_plotch);});
-	ch1_plotch->curve()->setSamples(vals,4);
+	ch1_plotch->curve()->setRawSamples(xTime.data(),y1Volt.data(),xTime.size());
 
 
 	MenuControlButton *ch2 = new MenuControlButton(this);
@@ -88,7 +100,7 @@ TestTool::TestTool(QWidget *parent)
 	connect(ch2->checkBox(),&QCheckBox::toggled, ch2_plotch, &PlotChannel::setEnabled);
 	connect(ch2->checkBox(),&QCheckBox::toggled, this, [=](){plot->replot();});
 	connect(ch2, &QAbstractButton::toggled, this, [=](){plot->selectChannel(ch2_plotch);});
-	ch2_plotch->curve()->setSamples(vals2,4);
+	ch2_plotch->curve()->setRawSamples(xTime.data(),y2Volt.data(),xTime.size());
 
 	MenuControlButton *cursor = new MenuControlButton(this);
 	cursor->setName("Cursors");
@@ -161,6 +173,26 @@ TestTool::TestTool(QWidget *parent)
 	hv->setAnchorPos(HoverPosition::HP_TOPLEFT);
 	hv->setContentPos(HoverPosition::HP_TOPRIGHT);
 
+	plot->leftHandlesArea()->setVisible(true);
+	plot->rightHandlesArea()->setVisible(true);
+	plot->bottomHandlesArea()->setVisible(true);
+	plot->topHandlesArea()->setVisible(true);
+
+	PlotCursors* plotCursors = new PlotCursors(plot);
+	plotCursors->setVisible(false);
+
+	PlotCursorReadouts* plotCursorReadouts = new PlotCursorReadouts(plot);
+	plotCursorReadouts->hide();
+	plotCursorReadouts->setFixedSize(200,80);
+	plotCursorReadouts->move(100,100);
+
+	connect(cursor,&QAbstractButton::toggled, plotCursorReadouts, &PlotCursorReadouts::setVisible);
+	connect(cursor,&QAbstractButton::toggled, plotCursors, &PlotCursors::setVisible);
+
+	connect(plotCursors, &PlotCursors::v1PositionChanged,plotCursorReadouts,&PlotCursorReadouts::setV1);
+	connect(plotCursors, &PlotCursors::v2PositionChanged,plotCursorReadouts,&PlotCursorReadouts::setV2);
+	connect(plotCursors, &PlotCursors::h1PositionChanged,plotCursorReadouts,&PlotCursorReadouts::setH1);
+	connect(plotCursors, &PlotCursors::h2PositionChanged,plotCursorReadouts,&PlotCursorReadouts::setH2);
 
 	connect(channels, &QAbstractButton::toggled, this, [=](bool b) {
 		qInfo()<<"setVisible: "<<b;
@@ -169,4 +201,23 @@ TestTool::TestTool(QWidget *parent)
 
 	});
 
+}
+
+void TestTool::initData()
+{
+	for(int i = 0; i < testDataSize ; i++){
+		xTime.push_back( (i / (double)testDataSize));
+		y1Volt.push_back(amplitude*sin(2 * 10 * 3.1416 * i / (double)testDataSize));
+		y2Volt.push_back(amplitude*sin(2 * 20 * 3.1416 * i / (double)testDataSize));
+	}
+}
+
+void TestTool::acquireData() {
+	y1Volt.clear();
+	y2Volt.clear();
+	for(int i = 0; i < testDataSize ; i++){
+		y1Volt.push_back(amplitude*sin(2 * 10 * 3.1416 * i / (double)testDataSize + phase));
+		y2Volt.push_back(amplitude*sin(2 * 20 * 3.1416 * i / (double)testDataSize + 2*phase));
+	}
+	phase++;
 }

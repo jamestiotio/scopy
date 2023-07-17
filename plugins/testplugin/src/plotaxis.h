@@ -7,6 +7,7 @@
 #include <DisplayPlot.h>
 #include "osc_scale_engine.h"
 #include "plotaxishandle.h"
+#include <QwtPlotZoomer>
 
 namespace scopy {
 class SCOPY_TESTPLUGIN_EXPORT PlotAxis : public QObject {
@@ -27,6 +28,8 @@ public:
 	double min() const;
 	double max() const;
 
+	QwtPlotZoomer *zoomer() const;
+
 public Q_SLOTS:
 	void setVisible(bool);
 	void updateAxisScale();
@@ -34,6 +37,7 @@ public Q_SLOTS:
 private:
 	QwtAxisId m_axisId;
 	PlotWidget *m_plotWidget;
+	QwtPlotZoomer *m_zoomer;
 	QwtPlot *m_plot;
 	int m_position;
 	OscScaleDraw *m_scaleDraw;
@@ -46,6 +50,7 @@ private:
 	double m_max;
 
 	void setupAxisScale();
+	void setupZoomer();
 };
 }
 #endif // PLOTAXIS_H

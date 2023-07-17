@@ -1,5 +1,6 @@
 #include "plotaxis.h"
 #include <QwtPlotLayout>
+#include <QDebug>
 
 using namespace scopy;
 PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
@@ -9,10 +10,8 @@ PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
 	m_max = 1;
 	m_divs = (isHorizontal()) ? 16.0 : 10.0;
 
-	// add Zoomer
-
-	// bufferpreviewer - part of plot
-	// cursors - part of plot (?)
+	// bufferpreviewer - part of instrument - connected to plotcontroller (?)
+	// cursors - part of instrument  (?)
 
 	// setRawSamples
 	// - how to compute X axis ?
@@ -22,6 +21,7 @@ PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
 	// acquisition metadata
 	// print
 
+	m_zoomer = nullptr;
 	m_id = m_plotWidget->plotAxis(m_position).count();
 	m_axisId = QwtAxisId(m_position, m_id);
 	m_plot->setAxesCount(position, m_id + 1);
@@ -39,7 +39,33 @@ PlotAxis::PlotAxis(int position, PlotWidget *p, QObject *parent) :
 	m_plotWidget->addPlotAxis(this);
 
 	setupAxisScale();
+	if(isVertical()) {
+		setupZoomer();
+	}
 	setVisible(false);
+
+}
+
+void PlotAxis::setupZoomer() {
+	// zoomer
+	// OscPlotZoomer - need constructor -
+
+//	m_zoomer = new QwtPlotZoomer(m_plotWidget->xAxis()->axisId(), m_axisId, m_plot->canvas(), false);
+
+//	m_zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
+//							  Qt::RightButton, Qt::ControlModifier);
+//	m_zoomer->setMousePattern(QwtEventPattern::MouseSelect3,
+//							  Qt::RightButton);
+
+//	m_zoomer->setZoomBase(false);
+//	m_zoomer->setEnabled(true);
+
+//	connect(m_zoomer,&QwtPlotZoomer::zoomed,this, [=](const QRectF &rect ) {
+//		qInfo()<< rect<< m_zoomer->zoomRectIndex() << "ZoomOut";
+//		m_scaleDraw->invalidateCache();
+//	});  - zoom out doesn't work correctly
+
+
 }
 
 void PlotAxis::setupAxisScale() {
@@ -95,6 +121,11 @@ void PlotAxis::setVisible(bool val)
 
 void PlotAxis::updateAxisScale() {
 	m_plot->setAxisScale(m_axisId, m_min, m_max, (m_max - m_min)/m_divs); // set Divs, limits
+}
+
+QwtPlotZoomer *PlotAxis::zoomer() const
+{
+	return m_zoomer;
 }
 
 double PlotAxis::max() const

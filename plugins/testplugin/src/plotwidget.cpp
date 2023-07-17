@@ -14,6 +14,9 @@
 #include "plotaxis.h"
 #include <pluginbase/preferences.h>
 #include <QwtPlotOpenGLCanvas>
+#include <QLabel>
+#include <QDebug>
+#include "DisplayPlot.h"
 
 using namespace scopy;
 
@@ -29,8 +32,7 @@ PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 
 	setupOpenGLCanvas();
 	setupHandlesArea();
-	//	m_zoomer = new OscPlotZoomer(m_plot->canvas(),false);
-	//	m_plot->setMouseTracking(true);
+
 
 	auto xAxis = new PlotAxis(QwtAxis::XBottom,this,this);
 	auto yAxis = new PlotAxis(QwtAxis::YLeft,this,this);
@@ -58,9 +60,10 @@ PlotWidget::PlotWidget(QWidget *parent) : QWidget(parent) {
 	m_plot->plotLayout()->setAlignCanvasToScales(true);
 	m_plot->plotLayout()->setCanvasMargin(0);
 	m_plot->plotLayout()->setSpacing(0);
+	setupZoomer();
+
 
 }
-
 void PlotWidget::setupHandlesArea() {
 	m_symbolCtrl = new SymbolController(m_plot);
 
@@ -70,19 +73,106 @@ void PlotWidget::setupHandlesArea() {
 	m_topHandlesArea = new HorizHandlesArea(m_plot->canvas());
 	m_leftHandlesArea = new VertHandlesArea(m_plot->canvas());
 
-	//	m_bottomHandlesArea->setMinimumHeight(50);
-	//	m_rightHandlesArea->setMinimumWidth(50);
-	//	m_topHandlesArea->setMinimumHeight(50);
-	m_leftHandlesArea->setMinimumWidth(50);
+	m_leftHandlesArea->setMinimumWidth(50);	
 	m_leftHandlesArea->setBottomPadding(0);
 	m_leftHandlesArea->setTopPadding(0); /// Why ?
+	m_leftHandlesArea->setVisible(false);
 
-	m_layout->addWidget(m_bottomHandlesArea,2,1);
-	m_layout->addWidget(m_rightHandlesArea,1,2);
-	m_layout->addWidget(m_leftHandlesArea,1,0);
-	m_layout->addWidget(m_topHandlesArea,0,1);
-	m_layout->addWidget(m_plot,1,1);
+	m_rightHandlesArea->setMinimumWidth(50);
+	m_rightHandlesArea->setBottomPadding(0);
+	m_rightHandlesArea->setTopPadding(0); /// Why ?
+	m_rightHandlesArea->setVisible(false);
+
+	m_bottomHandlesArea->setMinimumHeight(50);
+	m_bottomHandlesArea->setLeftPadding(0);
+	m_bottomHandlesArea->setRightPadding(0); /// Why ?
+	m_bottomHandlesArea->setVisible(false);
+
+	m_topHandlesArea->setMinimumHeight(50);
+	m_topHandlesArea->setLeftPadding(0);
+	m_topHandlesArea->setRightPadding(0); /// Why ?
+	m_topHandlesArea->setVisible(false);
+
+//	m_bufferPreviewer = new AnalogBufferPreviewer(this);
+//	m_bufferPreviewer->setMinimumHeight(20);
+//	m_bufferPreviewer->setCursorPos(0.5);
+//	m_bufferPreviewer->setHighlightPos(0.05);
+//	m_bufferPreviewer->setHighlightWidth(0.2);
+//	m_bufferPreviewer->setCursorVisible(false);
+//	m_bufferPreviewer->setWaveformPos(0.1);
+//	m_bufferPreviewer->setWaveformWidth(0.5);
+
+//	connect(m_bufferPreviewer, &BufferPreviewer::bufferStopDrag, this, [=]() {
+//		horiz_offset = m_bufferPreviewer->highlightPos();
+//	});
+//	connect(m_bufferPreviewer, &BufferPreviewer::bufferMovedBy, this, [=](int value) {
+////		qInfo()<<value;
+//		double moveTo = 0.0;
+//		double min = xAxis()->min();
+//		double max = xAxis()->max();
+//		int width = m_bufferPreviewer->width();
+//		double xA0xisWidth = max - min;
+
+//		moveTo = value * xAxisWidth / width;
+//		xAxis()->setInterval(min - moveTo, max - moveTo);
+//		m_plot->replot();
+
+//		auto delta = horiz_offset + (value/(float)width);
+
+//		qInfo()<< delta << value << width;
+//		m_bufferPreviewer->setHighlightPos(delta);
+
+
+////		updateBufferPreviewer();
+
+//	} );
+//	m_layout->addWidget(m_bufferPreviewer,0,1);
+	m_layout->addWidget(m_bottomHandlesArea,3,1);
+	m_layout->addWidget(m_rightHandlesArea,2,2);
+	m_layout->addWidget(m_leftHandlesArea,2,0);
+	m_layout->addWidget(m_topHandlesArea,1,1);
+	m_layout->addWidget(m_plot,2,1);
 }
+
+void PlotWidget::setupZoomer() {
+	// zoomer
+	// OscPlotZoomer - need constructor -
+	m_zoomer = new ExtendingPlotZoomer(xAxis()->axisId(), yAxis()->axisId(), m_plot->canvas(), false);
+
+
+	m_zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
+							  Qt::RightButton, Qt::ControlModifier);
+	m_zoomer->setMousePattern(QwtEventPattern::MouseSelect3,
+							  Qt::RightButton);
+	m_zoomer->setTrackerMode(QwtPicker::ActiveOnly);
+	const QColor c("#999999");
+	m_zoomer->setRubberBandPen(c);
+	m_zoomer->setTrackerPen(c);
+
+	m_zoomer->setEnabled(true);
+	m_zoomer->setZoomBase(false);
+	m_plot->setMouseTracking(true);
+
+	/*connect(m_zoomer,&ExtendingPlotZoomer::zoomed,this, [=](const QRectF &rect ) {
+		for(int i = 0; i < 4;i++) {
+			for(int j = 0 ;j < m_plotAxis[i].count();j++) {
+				QwtPlotZoomer *zoomer = m_plotAxis[i][j]->zoomer();
+				if(zoomer != nullptr) {
+					if(zoomer->zoomRectIndex() < m_zoomer->zoomRectIndex()) {
+						qInfo()<<zoomer->zoomRectIndex() << m_zoomer->zoomRectIndex() << i << j<< "ZoomIn";
+						zoomer->zoom(rect);
+					} else {
+						qInfo()<<zoomer->zoomRectIndex() << m_zoomer->zoomRectIndex() << i<<j<<"ZoomOut";
+						zoomer->zoom(0);
+						zoomer->setZoomBase();
+					}
+				}
+			}
+		}
+		m_plot->replot();
+	});*/
+}
+
 
 PlotWidget::~PlotWidget() {
 
@@ -224,6 +314,11 @@ PlotAxis *PlotWidget::xAxis() {
 	return m_plotAxis[QwtAxis::XBottom][0];
 }
 
+PlotAxis *PlotWidget::yAxis() {
+	return m_plotAxis[QwtAxis::YLeft][0];
+}
+
+
 QwtPlot *PlotWidget::plot() const
 {
 	return m_plot;
@@ -241,7 +336,6 @@ void PlotWidget::selectChannel(PlotChannel *ch)
 	}
 	m_selectedChannel = ch;
 
-//	m_zoomer->setAxes(m_selectedChannel->xAxis()->axisId(), m_selectedChannel->yAxis()->axisId());
 	m_selectedChannel->xAxis()->setVisible(false);
 	m_selectedChannel->yAxis()->setVisible(false);
 
@@ -253,8 +347,6 @@ void PlotWidget::selectChannel(PlotChannel *ch)
 	if(m_selectedChannel->handle()) {
 		m_selectedChannel->handle()->offsetHdl()->raise();
 	}
-
-	// bring handle to front - tied to
 }
 
 PlotChannel *PlotWidget::selectedChannel() const

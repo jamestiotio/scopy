@@ -10,6 +10,7 @@
 #include <QGridLayout>
 #include "plotaxishandle.h"
 #include <QwtPlotZoomer>
+#include <gui/buffer_previewer.hpp>
 
 namespace scopy {
 class PlotAxis;
@@ -26,6 +27,7 @@ public:
 
 	QList<PlotAxis *> &plotAxis(int position);
 	PlotAxis* xAxis();
+	PlotAxis *yAxis();
 
 	void addPlotAxis(PlotAxis *ax);
 	// void removePlotAxis(PlotAxis *ax);  - not supported by Qwt
@@ -62,7 +64,7 @@ Q_SIGNALS:
 private:
 
 	QwtPlot *m_plot;
-//	QwtPlotZoomer *m_zoomer;
+	QwtPlotZoomer *m_zoomer;
 	QGridLayout *m_layout;
 
 	QList<PlotChannel*> m_plotChannels;
@@ -83,10 +85,13 @@ private:
 	HorizHandlesArea *m_topHandlesArea;
 	VertHandlesArea *m_leftHandlesArea;
 
+	BufferPreviewer *m_bufferPreviewer;
+
 	void setAxisScalesVisible(bool visible);
 	void setupAxisScales();
 	void setupOpenGLCanvas();
 	void setupHandlesArea();
+	void setupZoomer();
 };
 
 

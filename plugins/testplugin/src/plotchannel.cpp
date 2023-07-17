@@ -36,11 +36,6 @@ QwtPlotCurve *PlotChannel::curve() const
 	return m_curve;
 }
 
-//void PlotChannel::setAxes(PlotAxis *x_axis, PlotAxis *y_axis)
-//{
-//	m_curve->setAxes(x_axis->axisId(), y_axis->axisId());
-//}
-
 void PlotChannel::setEnabled(bool b)
 {
 	if(b)
