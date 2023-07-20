@@ -30,23 +30,23 @@ class time_sink_f_impl : public time_sink_f
 private:
 	std::vector <std::deque <float>> m_buffers;
 	std::vector< std::vector<gr::tag_t> > m_tags;
-	std::vector<double> m_time;
+	std::vector<float> m_time;
 	std::vector<std::vector<float>> m_data;
 
 	int m_size;
-	double m_sampleRate;
+	float m_sampleRate;
 	std::string m_name;
 	int m_nconnections;
 
 public:
-	time_sink_f_impl(int size, double sampleRate, const std::string &name, int nconnections);
+	time_sink_f_impl(int size, float sampleRate, const std::string &name, int nconnections);
 	~time_sink_f_impl();
 
 	bool check_topology(int ninputs, int noutputs);
 	std::string name() const;
 
 	void updateData();
-	const std::vector<double> &time() const;
+	const std::vector<float> &time() const;
 	const std::vector<std::vector<float>> &data() const;
 	int work(int noutput_items,
 		 gr_vector_const_void_star &input_items,

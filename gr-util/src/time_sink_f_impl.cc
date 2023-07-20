@@ -36,14 +36,14 @@ using namespace gr;
 namespace scopy {
 
 time_sink_f::sptr
-time_sink_f::make(int size, double sampleRate, const std::string &name,
+time_sink_f::make(int size, float sampleRate, const std::string &name,
 		  int nconnections )
 {
 	return gnuradio::get_initial_sptr
 		(new time_sink_f_impl(size, sampleRate, name, nconnections));
 }
 
-time_sink_f_impl::time_sink_f_impl(int size, double sampleRate, const std::string &name, int nconnections )
+time_sink_f_impl::time_sink_f_impl(int size, float sampleRate, const std::string &name, int nconnections )
     : sync_block("time_sink_f",
 	io_signature::make(nconnections, nconnections, sizeof(float)),
 	io_signature::make(0, 0, 0)),
@@ -86,21 +86,19 @@ void time_sink_f_impl::updateData() {
 
 	for(int i = 0; i < m_nconnections; i++) {
 		m_data[i].clear();
-		for(int j = 0; j < m_size; j++) {
+		for(int j = 0; j < m_buffers[i].size(); j++) {
 			m_data[i].push_back(m_buffers[i][j]);
 		}
 	}
 }
 
-const std::vector<double> &time_sink_f_impl::time() const {
+const std::vector<float> &time_sink_f_impl::time() const {
 	return m_time;
 }
 
 const std::vector<std::vector<float> > &time_sink_f_impl::data() const {
 	return m_data;
 }
-
-
 
 int time_sink_f_impl::work(int noutput_items,
 		       gr_vector_const_void_star &input_items,
@@ -112,7 +110,7 @@ int time_sink_f_impl::work(int noutput_items,
 
 	for(int i = 0; i < m_nconnections; i++) {
 		for(int j = 0; j < noutput_items; j++) {
-			if(m_buffers[i].size() > m_size) {
+			if(m_buffers[i].size() >= m_size) {
 				m_buffers[i].pop_back();
 			}
 			const float *in;

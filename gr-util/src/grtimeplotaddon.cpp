@@ -6,7 +6,7 @@
 #include <grlog.h>
 #include <gr-gui/scope_sink_f.h>
 #include <gui/plotwidget.h>
-#include "time_sink_f.h"
+#include <QTimer>
 
 using namespace scopy;
 using namespace scopy::grutil;
@@ -14,9 +14,13 @@ GRTimePlotAddon::GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent)
 
 	this->name = name;
 	m_plotWidget = new PlotWidget();
+	m_plotWidget->xAxis()->setInterval(0,1);
 	m_plotWidget->leftHandlesArea()->setVisible(true);
 	m_plotWidget->bottomHandlesArea()->setVisible(true);
 	widget = m_plotWidget;
+	m_plotTimer = new QTimer(this);
+	connect(m_plotTimer, &QTimer::timeout, this, &GRTimePlotAddon::replot);
+
 }
 
 GRTimePlotAddon::~GRTimePlotAddon() { }
@@ -32,27 +36,27 @@ void GRTimePlotAddon::enable() {}
 void GRTimePlotAddon::disable() {}
 
 void GRTimePlotAddon::onStart() {
+	QElapsedTimer tim;
+	tim.start();
 	connect(m_top,SIGNAL(builtSignalPaths()), this, SLOT(connectSignalPaths()));
 	connect(m_top,SIGNAL(teardownSignalPaths()), this, SLOT(tearDownSignalPaths()));
 	// connect sink stopped ?
-
+	qInfo()<<"start"<<tim.elapsed();
 	m_top->build();
+	qInfo()<<"build"<<tim.elapsed();
 	m_top->start();
-
-	// connect timer to time sink to get data - or data driven - connect to sink_new data
-	// start timer
-
+	qInfo()<<"start"<<tim.elapsed();
+	m_plotTimer->setInterval(1/60.0);	
+	m_plotTimer->start();
+	qInfo()<<"timerstart"<<tim.elapsed();
 
 }
 
-/* void GRTimePlotAddon::getData() {
-	data = sink.getData(); // copies data from sink to plot
-	replot();
-	// Q_EMIT replot ?
-
-*/
-
-
+void GRTimePlotAddon::replot() {
+	// copies data from sink to plot
+	time_sink->updateData();
+	plot()->replot();
+}
 
  void GRTimePlotAddon::onStop() {
 	m_top->stop();
@@ -79,50 +83,42 @@ void GRTimePlotAddon::onChannelRemoved(ToolAddon *t) {
 
 void GRTimePlotAddon::connectSignalPaths() {
 	QList<GRSignalPath*> sigpaths;
+
+	// for through grdevices - get sampleRate;
+
 	for(auto &sigpath : m_top->signalPaths()) {
-		qInfo()<<sigpath->name();
+		qInfo()<<"Trying " << sigpath->name();
 		if(!sigpath->enabled())
 			continue;
 		if(!sigpath->name().startsWith(name))
 			continue;
 		sigpaths.append(sigpath);
-		qInfo()<<"created scope_sink_f with name" << sigpath->name();
+		qInfo()<<"Appended " << sigpath->name();
 
 	}
 
 
 
-	auto sink = time_sink_f::make(1024,1000,name.toStdString(),sigpaths.count());
+	time_sink = time_sink_f::make(1024,1000,name.toStdString(),sigpaths.count());
 	// create and configure time_sink_f
 	// allocate memory for data to be plotted - could be done by time_sink ?
 
 
 	int i=0;
-	for(auto &sigpath : sigpaths) {
-	/*	REGISTER SINK !
-	 * GRTimeChannelAddon *time;
-		for(auto gr : grChannels) {
-			if(gr->signalPath() == sigpath) {
-				time = gr;
-				break;
-			}
+	/*	REGISTER SINK !*/
+	for(GRTimeChannelAddon* gr : qAsConst(grChannels)) {
+		if(gr->signalPath()->enabled()) {
+			m_top->connect(gr->signalPath()->getGrEndPoint(), 0, time_sink, i);
+			gr->plotCh()->curve()->setRawSamples(time_sink->time().data(), time_sink->data()[i].data(), 1024);
+			i++;
 		}
-		///time->registerSink();
-		///
-	*/
-		m_top->connect(sigpath->getGrEndPoint(), 0, sink, i);
-		i++;
-	}
-
-	for(int i=0;i<sigpaths.count();i++) {
-
 	}
 }
 
 void GRTimePlotAddon::tearDownSignalPaths() {
-	for(auto &sink : sinks) {
+	/*for(auto &sink : sinks) {
 	}
-	sinks.clear();
+	sinks.clear();*/
 
 }
 

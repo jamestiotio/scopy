@@ -30,6 +30,8 @@ public:
 
 	GRSignalPath *signalPath() const;
 
+	PlotChannel *plotCh() const;
+
 public Q_SLOTS:
 	void enable() override;
 	void disable() override;

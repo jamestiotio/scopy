@@ -5,7 +5,8 @@
 #include "tooladdon.h"
 #include <gui/oscilloscope_plot.hpp>
 #include <QGridLayout>
-#include <gr-gui/scope_sink_f.h>
+#include "time_sink_f.h"
+#include <QTimer>
 
 namespace scopy::grutil {
 using namespace scopy;
@@ -32,17 +33,17 @@ public Q_SLOTS:
 	void onChannelAdded(ToolAddon* t) override;
 	void onChannelRemoved(ToolAddon*) override;
 
-
-private slots:
+	void replot();
 	void connectSignalPaths();
 	void tearDownSignalPaths();
 	void onNewData();
 private:
 	QString name;
 	QWidget *widget;
+	QTimer *m_plotTimer;
 	GRTopBlock *m_top;
 	PlotWidget *m_plotWidget;
-	QList<scope_sink_f::sptr> sinks;
+	time_sink_f::sptr time_sink;
 	QList<GRTimeChannelAddon*> grChannels;
 };
 }

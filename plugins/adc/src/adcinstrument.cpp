@@ -110,24 +110,31 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 
 void AdcInstrument::run(bool b) {
 	qInfo()<<b;
+	QElapsedTimer tim;
+	tim.start();
 
+
+	qInfo()<<tim.elapsed();
 	for(auto ch : proxy->getChannelAddons()) {
 		if(b)
 			ch->onStart();
 		else
 			ch->onStop();
 	}
+	qInfo()<<tim.elapsed();
 	for(auto dev : proxy->getDeviceAddons()) {
 		if(b)
 			dev->onStart();
 		else
 			dev->onStop();
 	}
+	qInfo()<<tim.elapsed();
 
 	if(b)
 		proxy->getPlotAddon()->onStart();
 	else
 		proxy->getPlotAddon()->onStop();
+	qInfo()<<tim.elapsed();
 
 
 
