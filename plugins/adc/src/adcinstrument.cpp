@@ -94,7 +94,6 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 			btn->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 			btn->setColor(ch->pen().color());
 			btn->setCheckable(true);
-			btn->checkBox()->setChecked(true);
 
 			QString id = ch->getName() + QString::number(uuid++);
 			tool->rightStack()->add(id, ch->getWidget());
@@ -102,6 +101,8 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 			connect(btn->button(), &QPushButton::toggled, this, [=](bool b) { if(b) tool->requestMenu(id);});
 			rightMenuBtnGrp->addButton(btn->button());
 			plotAddon->onChannelAdded(ch);
+			btn->checkBox()->setChecked(true);
+
 		}
 	}
 

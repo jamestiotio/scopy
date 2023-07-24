@@ -4,7 +4,7 @@
 Q_LOGGING_CATEGORY(SCOPY_GR_UTIL, "GRManager")
 
 using namespace scopy::grutil;
-GRTopBlock::GRTopBlock(QString name, QObject *parent) : running(false), built(false)
+GRTopBlock::GRTopBlock(QString name, QObject *parent) : QObject(parent), running(false), built(false)
 {
 	static int topblockid = 0;
 	QString topblockname = m_name + QString::number(topblockid);

@@ -129,19 +129,8 @@ PlotProxy* ADCPlugin::createRecipe(iio_context *ctx) {
 		recipe->addDeviceAddon(d);
 
 		for(const QString &ch : devChannelMap.value(iio_dev,{})) {
-			qDebug()<<ch;
-			GRSignalPath *sig = new GRSignalPath(plotRecipePrefix + iio_dev + ch, top);
-			sig->append(new GRIIOFloatChannelSrc(gr_dev,ch,sig));
-			auto scOff = new GRScaleOffsetProc(sig);
-			sig->append(scOff);			
-			scOff->setOffset(0);
-			scOff->setScale(1);
-
-			sig->setEnabled(true);
-			top->registerSignalPath(sig);
-
-			GRTimeChannelAddon *t = new GRTimeChannelAddon(sig, p, QPen(StyleHelper::getColor("CH"+QString::number(i))), this);
-			t->setDevice(d);
+			GRTimeChannelAddon *t = new GRTimeChannelAddon(ch, d, p, QPen(StyleHelper::getColor("CH"+QString::number(i))), this);
+			top->registerSignalPath(t->signalPath());
 			recipe->addChannelAddon(t);
 			i++;
 		}

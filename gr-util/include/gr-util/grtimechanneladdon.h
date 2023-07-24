@@ -17,7 +17,7 @@ class GRDeviceAddon;
 class SCOPY_GR_UTIL_EXPORT GRTimeChannelAddon : public QObject, public ToolAddon {
 	Q_OBJECT
 public:
-	GRTimeChannelAddon(GRSignalPath* path, GRTimePlotAddon* plotAddon, QPen pen, QObject *parent = nullptr);
+	GRTimeChannelAddon(QString ch, GRDeviceAddon* dev, GRTimePlotAddon* plotAddon, QPen pen, QObject *parent = nullptr);
 	~GRTimeChannelAddon();
 
 	QString getName() override;
