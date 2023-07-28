@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QEvent>
 #include "scopy-gui_export.h"
+#include "utils.h"
 
 namespace scopy {
 enum HoverPosition {
@@ -21,6 +22,7 @@ enum HoverPosition {
 
 class SCOPY_GUI_EXPORT HoverWidget : public QWidget {
 	Q_OBJECT
+	QWIDGET_PAINT_EVENT_HELPER
 public:
 	HoverWidget(QWidget *content, QWidget *anchor = nullptr, QWidget *parent = nullptr);
 	~HoverWidget();
@@ -50,7 +52,6 @@ private:
 	// QWidget interface
 protected:
 	void showEvent(QShowEvent *event) override;
-	void paintEvent(QPaintEvent *e) override;
 };
 }
 #endif // HOVERWIDGET_H

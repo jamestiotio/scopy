@@ -1,8 +1,5 @@
 #include "hoverwidget.h"
 #include <QDebug>
-#include <QPaintEvent>
-#include <QStyleOption>
-#include <QPainter>
 #include <QLoggingCategory>
 using namespace scopy;
 Q_LOGGING_CATEGORY(CAT_HOVERWIDGET,"HoverWidget")
@@ -170,14 +167,4 @@ void HoverWidget::showEvent(QShowEvent *event)
 {
 	moveToAnchor();
 	QWidget::showEvent(event);
-}
-
-void HoverWidget::paintEvent(QPaintEvent *e) {
-	// https://forum.qt.io/topic/25142/solved-applying-style-on-derived-widget-with-custom-property-failes/2
-	// https://doc.qt.io/qt-5/stylesheet-reference.html
-
-	QStyleOption opt;
-	opt.init(this);
-	QPainter p(this);
-	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }

@@ -27,6 +27,9 @@
 #include <QWidget>
 #include <QDockWidget>
 #include <QMainWindow>
+#include <QStyleOption>
+#include <QStyle>
+#include <QPainter>
 
 #include <string>
 #include <algorithm>
@@ -62,5 +65,17 @@ public:
 	static QDockWidget* createDockWidget(QMainWindow* mainWindow, QWidget* widget, const QString& title = "");
 	static void configureTopBar(QDockWidget* docker);
 };
+
+// https://forum.qt.io/topic/25142/solved-applying-style-on-derived-widget-with-custom-property-failes/2
+// https://doc.qt.io/qt-5/stylesheet-reference.html
+
+#define QWIDGET_PAINT_EVENT_HELPER \
+public:\
+	void paintEvent(QPaintEvent *e) override {\
+		    QStyleOption opt;\
+		    opt.init(this);\
+		    QPainter p(this);\
+		    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);\
+	}
 
 #endif /* M2K_UTILS_H */

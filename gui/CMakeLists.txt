@@ -21,9 +21,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
-FILE(GLOB SRC_LIST  src/*.cpp src/*.cc src/binding/*.cpp src/prop/*.cpp)
-FILE(GLOB HEADER_LIST include/${SCOPY_MODULE}/*.h include/${SCOPY_MODULE}/*.hpp include/${SCOPY_MODULE}/binding/*.hpp include/${SCOPY_MODULE}/prop/*.hpp)
+FILE(GLOB SRC_LIST  src/*.cpp src/widgets/*.cpp src/*.cc src/binding/*.cpp src/prop/*.cpp)
+FILE(GLOB HEADER_LIST include/${SCOPY_MODULE}/*.h include/${SCOPY_MODULE}/*.hpp  include/${SCOPY_MODULE}/widgets/*.h include/${SCOPY_MODULE}/binding/*.hpp include/${SCOPY_MODULE}/prop/*.hpp)
 FILE(GLOB UI_LIST ui/*.ui)
+
+message(${SRC_LIST})
+message(${HEADER_LIST})
 
 qt_add_resources(PROJECT_RESOURCES res/resources.qrc)
 
