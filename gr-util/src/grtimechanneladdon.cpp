@@ -23,8 +23,8 @@ QWidget* GRTimeChannelAddon::createYAxisMenu(QWidget* parent) {
 	MenuCollapseSection *yaxis = new MenuCollapseSection("Y-AXIS",MenuCollapseSection::MHCW_NONE, yaxiscontainer);
 
 	// Y-MODE
-	MenuCombo *cbb = new MenuCombo("YMODE", yaxis);
-	auto cb = cbb->combo();
+	m_ymodeCb = new MenuCombo("YMODE", yaxis);
+	auto cb = m_ymodeCb->combo();
 	cb->addItem("ADC Counts", YMODE_COUNT);
 	cb->addItem("% Full Scale", YMODE_FS);
 
@@ -67,7 +67,7 @@ QWidget* GRTimeChannelAddon::createYAxisMenu(QWidget* parent) {
 
 	yaxis->contentLayout()->addWidget(autoscale);
 	yaxis->contentLayout()->addWidget(yMinMax);
-	yaxis->contentLayout()->addWidget(cbb);
+	yaxis->contentLayout()->addWidget(m_ymodeCb);
 
 	yaxiscontainer->contentLayout()->addWidget(yaxis);
 
@@ -97,10 +97,6 @@ QWidget* GRTimeChannelAddon::createYAxisMenu(QWidget* parent) {
 		setYMode(static_cast<YMode>(mode));
 	});
 
-	// Defaults
-	m_ymin->setValue(-1.0);
-	m_ymax->setValue(1.0);
-	cb->setCurrentIndex(1);
 
 	return yaxiscontainer;
 }
@@ -312,9 +308,14 @@ void GRTimeChannelAddon::setYMode(YMode mode)
 }
 
 
-void GRTimeChannelAddon::onAdd() {  }
+void GRTimeChannelAddon::onInit() {
+	// Defaults
+	m_ymin->setValue(-1.0);
+	m_ymax->setValue(1.0);
+	m_ymodeCb->combo()->setCurrentIndex(1);
+}
 
-void GRTimeChannelAddon::onRemove() {}
+void GRTimeChannelAddon::onDeinit() {}
 
 void GRTimeChannelAddon::onChannelAdded(ToolAddon *) {}
 

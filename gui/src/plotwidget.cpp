@@ -307,7 +307,7 @@ void PlotWidget::selectChannel(PlotChannel *ch)
 	}
 	m_selectedChannel = ch;
 
-	m_selectedChannel->xAxis()->setVisible(false);
+	m_selectedChannel->xAxis()->setVisible(true);
 	m_selectedChannel->yAxis()->setVisible(true);
 
 	if(m_selectedChannel->curve()) {
