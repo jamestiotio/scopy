@@ -62,8 +62,8 @@ private:
 	QPen m_pen;
 	QTimer *m_autoScaleTimer;
 
-	ScaleSpinButton *m_ymin;
-	ScaleSpinButton *m_ymax;
+	PositionSpinButton *m_ymin;
+	PositionSpinButton *m_ymax;
 
 	PlotChannel *m_plotCh;
 	PlotAxis *m_plotAxis;

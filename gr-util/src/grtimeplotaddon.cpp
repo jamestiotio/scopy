@@ -6,6 +6,7 @@
 #include <grlog.h>
 #include <gr-gui/scope_sink_f.h>
 #include <gui/plotwidget.h>
+#include <gui/buffer_previewer.hpp>
 #include <QTimer>
 
 using namespace scopy;
@@ -13,14 +14,58 @@ using namespace scopy::grutil;
 GRTimePlotAddon::GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent) : QObject(parent), m_top(top){
 
 	this->name = name;
-	m_plotWidget = new PlotWidget();
+	widget = new QWidget();
+	m_lay = new QVBoxLayout(widget);
+	m_plotWidget = new PlotWidget(widget);
+	widget->setLayout(m_lay);
+
 	m_plotWidget->xAxis()->setInterval(0,1);
 	m_plotWidget->leftHandlesArea()->setVisible(true);
+	m_plotWidget->rightHandlesArea()->setVisible(true);
 	m_plotWidget->bottomHandlesArea()->setVisible(true);
-	widget = m_plotWidget;
+//	m_plotWidget->topHandlesArea()->setVisible(true);
+
+//	setupBufferPreviewer();
+	m_lay->addWidget(m_plotWidget);
 	m_plotTimer = new QTimer(this);
 	connect(m_plotTimer, &QTimer::timeout, this, &GRTimePlotAddon::replot);
 
+}
+
+void GRTimePlotAddon::setupBufferPreviewer() {
+	AnalogBufferPreviewer* m_bufferPreviewer = new AnalogBufferPreviewer(widget);
+	m_bufferPreviewer->setMinimumHeight(20);
+	m_bufferPreviewer->setCursorPos(0.5);
+	m_bufferPreviewer->setHighlightPos(0.05);
+	m_bufferPreviewer->setHighlightWidth(0.2);
+	m_bufferPreviewer->setCursorVisible(false);
+	m_bufferPreviewer->setWaveformPos(0.1);
+	m_bufferPreviewer->setWaveformWidth(0.5);
+
+//	connect(m_bufferPreviewer, &BufferPreviewer::bufferStopDrag, this, [=]() {
+//		horiz_offset = m_bufferPreviewer->highlightPos();
+//	});
+//	connect(m_bufferPreviewer, &BufferPreviewer::bufferMovedBy, this, [=](int value) {
+//		qInfo()<<value;
+//		double moveTo = 0.0;
+//		double min = xAxis()->min();
+//		double max = xAxis()->max();
+//		int width = m_bufferPreviewer->width();
+//		double xA0xisWidth = max - min;
+
+//		moveTo = value * xAxisWidth / width;
+//		xAxis()->setInterval(min - moveTo, max - moveTo);
+//		m_plot->replot();
+
+//		auto delta = horiz_offset + (value/(float)width);
+
+//		qInfo()<< delta << value << width;
+//		m_bufferPreviewer->setHighlightPos(delta);
+
+
+//		updateBufferPreviewer();
+//	} );
+	m_lay->addWidget(m_bufferPreviewer);
 }
 
 GRTimePlotAddon::~GRTimePlotAddon() { }
@@ -43,7 +88,10 @@ void GRTimePlotAddon::onStart() {
 	// connect sink stopped ?
 	m_top->build();
 	m_top->start();
-	m_plotTimer->setInterval(1/60.0);	
+
+	int timeout = (1.0/60.0)*1000;
+
+	m_plotTimer->setInterval(timeout);
 	m_plotTimer->start();
 
 }
@@ -96,7 +144,7 @@ void GRTimePlotAddon::connectSignalPaths() {
 
 
 
-	time_sink = time_sink_f::make(1024,1000,name.toStdString(),sigpaths.count());
+	time_sink = time_sink_f::make(400,1000,name.toStdString(),sigpaths.count());
 	// create and configure time_sink_f
 	// allocate memory for data to be plotted - could be done by time_sink ?
 
@@ -106,7 +154,7 @@ void GRTimePlotAddon::connectSignalPaths() {
 	for(GRTimeChannelAddon* gr : qAsConst(grChannels)) {
 		if(gr->signalPath()->enabled()) {
 			m_top->connect(gr->signalPath()->getGrEndPoint(), 0, time_sink, i);
-			gr->plotCh()->curve()->setRawSamples(time_sink->time().data(), time_sink->data()[i].data(), 1024);
+			gr->plotCh()->curve()->setRawSamples(time_sink->time().data(), time_sink->data()[i].data(), 400);
 			i++;
 		}
 	}

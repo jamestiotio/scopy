@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include "time_sink_f.h"
 #include <QTimer>
+#include <QVBoxLayout>
 
 namespace scopy::grutil {
 using namespace scopy;
@@ -46,6 +47,8 @@ private:
 	PlotWidget *m_plotWidget;
 	time_sink_f::sptr time_sink;
 	QList<GRTimeChannelAddon*> grChannels;
+	QVBoxLayout* m_lay;
+	void setupBufferPreviewer();
 };
 }
 

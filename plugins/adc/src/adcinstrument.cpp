@@ -111,7 +111,7 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	}
 
 	connect(runBtn,&QPushButton::toggled, this, &AdcInstrument::run);
-	tool->requestMenu("voltage02");
+	tool->requestMenu("time__settings");
 	channelGroup->buttons()[0]->setChecked(true);
 }
 
