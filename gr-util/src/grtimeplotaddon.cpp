@@ -9,9 +9,12 @@
 #include <gui/buffer_previewer.hpp>
 #include <QTimer>
 #include <QLoggingCategory>
+#include <pluginbase/preferences.h>
+#include <QwtWeedingCurveFitter>
 
 Q_LOGGING_CATEGORY(CAT_GRTIMEPLOT, "GRTimePlotAddon");
 
+//#define GUI_THREAD_SAMPLING
 
 using namespace scopy;
 using namespace scopy::grutil;
@@ -19,7 +22,11 @@ GRTimePlotAddon::GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent)
 	: QObject(parent),
 	m_top(top),
 	time_sink(nullptr),
-	m_rollingMode(false){
+	m_rollingMode(false),
+	m_started(false),
+	m_singleShot(false){
+
+	Preferences *p = Preferences::GetInstance();
 
 	this->name = name;
 	widget = new QWidget();
@@ -37,8 +44,11 @@ GRTimePlotAddon::GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent)
 //	setupBufferPreviewer();
 	m_lay->addWidget(m_plotWidget);
 	m_plotTimer = new QTimer(this);
+	m_plotTimer->setSingleShot(true);
 	connect(m_plotTimer, &QTimer::timeout, this, &GRTimePlotAddon::replot);
+	connect(p, SIGNAL(preferenceChanged(QString,QVariant)), this, SLOT(handlePreferences(QString,QVariant)));
 
+	fw = new QFutureWatcher<void>(this);
 }
 
 void GRTimePlotAddon::setupBufferPreviewer() {
@@ -78,7 +88,6 @@ void GRTimePlotAddon::setupBufferPreviewer() {
 }
 
 GRTimePlotAddon::~GRTimePlotAddon() {
-	onStop();
 }
 
 QString GRTimePlotAddon::getName() { return name; }
@@ -93,61 +102,103 @@ void GRTimePlotAddon::disable() {}
 
 void GRTimePlotAddon::stopPlotRefresh() {
 	qInfo(CAT_GRTIMEPLOT)<<"Stopped plotting";
+#ifdef GUI_THREAD_SAMPLING
+#else
+	refillFuture.cancel();
+	disconnect(futureWatcherConn);
+#endif
+	drawPlot();
 	m_plotTimer->stop();
 }
 
+
 void GRTimePlotAddon::startPlotRefresh() {
 	qInfo(CAT_GRTIMEPLOT)<<"Start plotting";
-	replot();
-	int timeout = (1.0/60.0)*1000;
-	m_plotTimer->setInterval(timeout);
+	updateFrameRate();
+
+#ifdef GUI_THREAD_SAMPLING
+#else
+	futureWatcherConn = connect(fw, &QFutureWatcher<void>::finished, this, [=](){
+		    drawPlot();
+		    m_plotTimer->start();
+	    }, Qt::QueuedConnection);
+#endif
+	drawPlot();
 	m_plotTimer->start();
+
+
+}
+
+void GRTimePlotAddon::drawPlot() {
+	qInfo(CAT_GRTIMEPLOT)<<"Draw plot";
+	setRawSamplesPtr();
+	plot()->replot();
+	if(time_sink->finishedAcquisition())
+		Q_EMIT requestStop();
 }
 
 void GRTimePlotAddon::onStart() {
-	QElapsedTimer tim;
-	tim.start();
-	connect(this, &GRTimePlotAddon::requestRebuild, m_top, &GRTopBlock::rebuild);
-	connect(m_top,SIGNAL(builtSignalPaths()), this, SLOT(connectSignalPaths()));
-	connect(m_top,SIGNAL(teardownSignalPaths()), this, SLOT(tearDownSignalPaths()));
-	connect(m_top, &GRTopBlock::aboutToStop, this, &GRTimePlotAddon::stopPlotRefresh);
-	connect(m_top, &GRTopBlock::started, this, &GRTimePlotAddon::startPlotRefresh);
+	if(!m_started) {
+		QElapsedTimer tim;
+		tim.start();
+		connect(this, &GRTimePlotAddon::requestRebuild, m_top, &GRTopBlock::rebuild, Qt::QueuedConnection);
+		connect(m_top,SIGNAL(builtSignalPaths()), this, SLOT(connectSignalPaths()));
+		connect(m_top,SIGNAL(teardownSignalPaths()), this, SLOT(tearDownSignalPaths()));
+		connect(m_top, &GRTopBlock::aboutToStop, this, &GRTimePlotAddon::stopPlotRefresh);
+		connect(m_top, &GRTopBlock::started, this, &GRTimePlotAddon::startPlotRefresh);
 
-	m_top->build();
-	m_top->start();
-
-}
-
-void GRTimePlotAddon::setRawSamplesPtr() {
-	int i=0;
-	for(GRTimeChannelAddon* gr : qAsConst(grChannels)) {
-		if(gr->signalPath()->enabled()) {
-			gr->plotCh()->curve()->setRawSamples(time_sink->time().data(), time_sink->data()[i].data(), time_sink->data()[i].size());
-			i++;
-		}
+		m_top->build();
+		m_top->start();
+		m_started = true;
 	}
-}
 
-void GRTimePlotAddon::replot() {
-	time_sink->updateData();
-	setRawSamplesPtr();
-	plot()->replot();
 }
 
  void GRTimePlotAddon::onStop() {
-	m_top->stop();
-	m_top->teardown();
-	disconnect(m_top,SIGNAL(builtSignalPaths()), this, SLOT(connectSignalPaths()));
-	disconnect(m_top,SIGNAL(teardownSignalPaths()), this, SLOT(tearDownSignalPaths()));
-	disconnect(m_top, &GRTopBlock::aboutToStop,this, &GRTimePlotAddon::stopPlotRefresh);
-	disconnect(m_top, &GRTopBlock::started,this, &GRTimePlotAddon::startPlotRefresh);
+	 if(m_started) {
+		 m_top->stop();
+		 m_top->teardown();
+		 disconnect(this, &GRTimePlotAddon::requestRebuild, m_top, &GRTopBlock::rebuild);
+		 disconnect(m_top,SIGNAL(builtSignalPaths()), this, SLOT(connectSignalPaths()));
+		 disconnect(m_top,SIGNAL(teardownSignalPaths()), this, SLOT(tearDownSignalPaths()));
+		 disconnect(m_top, &GRTopBlock::aboutToStop,this, &GRTimePlotAddon::stopPlotRefresh);
+		 disconnect(m_top, &GRTopBlock::started,this, &GRTimePlotAddon::startPlotRefresh);
+		 m_started = false;
+	 }
 }
 
- void GRTimePlotAddon::onInit() {
-	qInfo()<<"INIT";
+ void GRTimePlotAddon::setRawSamplesPtr() {
+	 int i=0;
+	 for(GRTimeChannelAddon* gr : qAsConst(grChannels)) {
+		 if(gr->signalPath()->enabled()) {
+			 gr->plotCh()->curve()->setRawSamples(time_sink->time().data(), time_sink->data()[i].data(), time_sink->data()[i].size());
+			 i++;
+		 }
+	 }
  }
 
- void GRTimePlotAddon::onDeinit() {}
+ void GRTimePlotAddon::replot() {
+#ifdef GUI_THREAD_SAMPLING
+	 time_sink->updateData();
+	 drawPlot();
+	 m_plotTimer->start();
+#else
+	 refillFuture = QtConcurrent::run([=]() {
+		 qInfo(CAT_GRTIMEPLOT)<<"UpdateData";
+//		 std::unique_lock lock(refillMutex);
+		 time_sink->updateData();
+	 });
+	 fw->setFuture(refillFuture);
+#endif
+ }
+ void GRTimePlotAddon::onInit() {
+	 qDebug(CAT_GRTIMEPLOT)<<"Init";
+ }
+
+ void GRTimePlotAddon::onDeinit() {
+	 qDebug(CAT_GRTIMEPLOT)<<"Deinit";
+	 onStop();
+ }
 
 void GRTimePlotAddon::onChannelAdded(ToolAddon *t) {
 	auto ch = dynamic_cast<GRTimeChannelAddon*> (t);
@@ -179,19 +230,28 @@ void GRTimePlotAddon::connectSignalPaths() {
 
 	time_sink = time_sink_f::make(m_plotSize,1,name.toStdString(),sigpaths.count());
 	time_sink->setRollingMode(m_rollingMode);
+	time_sink->setSingleShot(m_singleShot);
 	updateXAxis();
 
 	int i=0;
 	for(GRTimeChannelAddon* gr : qAsConst(grChannels)) {
 		if(gr->signalPath()->enabled()) {
 			m_top->connect(gr->signalPath()->getGrEndPoint(), 0, time_sink, i);
+			if(m_plotSize >= 1000000) {
+				gr->plotCh()->curve()->setPaintAttribute(QwtPlotCurve::ClipPolygons);
+				gr->plotCh()->curve()->setPaintAttribute(QwtPlotCurve::ImageBuffer);
+				gr->plotCh()->curve()->setPaintAttribute(QwtPlotCurve::FilterPoints);
+				gr->plotCh()->curve()->setPaintAttribute(QwtPlotCurve::FilterPointsAggressive);
+				auto curveFitter = new QwtWeedingCurveFitter(100000000);
+				curveFitter->setChunkSize(100000000);
+				gr->plotCh()->curve()->setCurveFitter(curveFitter);
+			}
 			i++;
 		}
 	}
 }
 
 void GRTimePlotAddon::tearDownSignalPaths() {
-	time_sink = nullptr;
 }
 
 void GRTimePlotAddon::onNewData() {
@@ -201,11 +261,13 @@ void GRTimePlotAddon::onNewData() {
 
 void GRTimePlotAddon::updateXAxis() {
 	if(m_rollingMode) {
-		plot()->xAxis()->setMin(time_sink->time().front());
-		plot()->xAxis()->setMax(time_sink->time().back());
-	} else {
+		// not normal mode - rolling mode
 		plot()->xAxis()->setMin(time_sink->time().back());
 		plot()->xAxis()->setMax(time_sink->time().front());
+	} else {
+		// normal mode
+		plot()->xAxis()->setMin(time_sink->time().front());
+		plot()->xAxis()->setMax(time_sink->time().back());
 	}
 }
 
@@ -222,11 +284,45 @@ void GRTimePlotAddon::setRollingMode(bool b)
 void GRTimePlotAddon::setBufferSize(uint32_t size)
 {
 	m_bufferSize = size;
+//	std::unique_lock lock(refillMutex);
 	Q_EMIT requestRebuild();
 }
 
 void GRTimePlotAddon::setPlotSize(uint32_t size)
 {
 	m_plotSize = size;
+//	std::unique_lock lock(refillMutex);
 	Q_EMIT requestRebuild();
+}
+
+void GRTimePlotAddon::handlePreferences(QString key, QVariant)
+{
+	if(key == "general_plot_target_fps") {
+		updateFrameRate();
+	}
+}
+
+void GRTimePlotAddon::setSingleShot(bool b)
+{
+	m_singleShot = b;
+	if(time_sink) {
+		time_sink->setSingleShot(m_singleShot);
+	}
+	/*if(m_singleShot) {
+		connect(m_top, &GRTopBlock::finished, this, &GRTimePlotAddon::requestStop, Qt::QueuedConnection);
+	} else {
+		disconnect(m_top, &GRTopBlock::finished, this, &GRTimePlotAddon::requestStop);
+	}*/
+}
+
+void GRTimePlotAddon::updateFrameRate() {
+	Preferences *p = Preferences::GetInstance();
+	double framerate = p->get("general_plot_target_fps").toDouble();
+	setFrameRate(framerate);
+
+}
+
+void GRTimePlotAddon::setFrameRate(double val) {
+	int timeout = (1.0/val)*1000;
+	m_plotTimer->setInterval(timeout);
 }

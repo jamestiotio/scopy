@@ -65,6 +65,7 @@ private:
 	PositionSpinButton *m_xmax;
 	PositionSpinButton *m_sampleRateSpin;
 	MenuOnOffSwitch *m_rollingModeSw;
+	MenuOnOffSwitch *m_syncBufferPlot;
 
 	bool m_sampleRateAvailable;
 

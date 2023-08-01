@@ -79,7 +79,19 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 	bufferPlotSizeLayout->addWidget(m_bufferSizeSpin);
 	bufferPlotSizeLayout->addWidget(m_plotSizeSpin);
 
-	MenuOnOffSwitch *syncBufferPlot = new MenuOnOffSwitch(tr("SYNC BUFFER-PLOT SIZES"), xaxis, false);
+	m_syncBufferPlot = new MenuOnOffSwitch(tr("SYNC BUFFER-PLOT SIZES"), xaxis, false);
+	connect(m_syncBufferPlot->onOffswitch(), &QAbstractButton::toggled, this, [=](bool b) {
+		m_plotSizeSpin->setEnabled(!b);
+		m_rollingModeSw->setEnabled(!b);
+		if(b) {
+			m_rollingModeSw->onOffswitch()->setChecked(false);
+			m_plotSizeSpin->setValue(m_bufferSizeSpin->value());
+			connect(m_bufferSizeSpin, &ScaleSpinButton::valueChanged, m_plotSizeSpin, &ScaleSpinButton::setValue);
+		} else {
+			disconnect(m_bufferSizeSpin, &ScaleSpinButton::valueChanged, m_plotSizeSpin, &ScaleSpinButton::setValue);
+		}
+
+	});
 	m_rollingModeSw = new MenuOnOffSwitch(tr("ROLLING MODE"), xaxis, false);
 	connect(m_rollingModeSw->onOffswitch(), &QAbstractButton::toggled, this, &GRTimePlotAddonSettings::setRollingMode);
 	connect(this, &GRTimePlotAddonSettings::rollingModeChanged, m_plot, &GRTimePlotAddon::setRollingMode);
@@ -143,7 +155,7 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 	xaxiscontainer->contentLayout()->setSpacing(10);
 	xaxiscontainer->contentLayout()->addWidget(xaxis);
 	xaxis->contentLayout()->addWidget(bufferPlotSize);
-	xaxis->contentLayout()->addWidget(syncBufferPlot);
+	xaxis->contentLayout()->addWidget(m_syncBufferPlot);
 	xaxis->contentLayout()->addWidget(m_rollingModeSw);
 	xaxis->contentLayout()->addWidget(xMinMax);
 	xaxis->contentLayout()->addWidget(cbb);
@@ -184,7 +196,8 @@ void GRTimePlotAddonSettings::onInit() {
 	m_plotSizeSpin->setValue(32);
 	m_xmin->setValue(0);
 	m_xmax->setValue(31);
-	m_rollingModeSw->onOffswitch()->setChecked(false);
+	m_syncBufferPlot->onOffswitch()->setChecked(true);
+//	m_rollingModeSw->onOffswitch()->setChecked(false);
 }
 
 void GRTimePlotAddonSettings::onDeinit() {

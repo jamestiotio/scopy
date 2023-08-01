@@ -29,10 +29,10 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	tool->setRightContainerWidth(300);
 
 	GearBtn *settingsMenu = new GearBtn(this);
-	RunBtn *runBtn = new RunBtn(this);
 	InfoBtn *infoBtn = new InfoBtn(this);
-	SingleShotBtn *singleBtn = new SingleShotBtn(this);
 	PrintBtn *printBtn = new PrintBtn(this);
+	runBtn = new RunBtn(this);
+	singleBtn = new SingleShotBtn(this);
 
 	MenuControlButton *channelsBtn = new MenuControlButton(this);
 	channelsBtn->setName("Channels");
@@ -111,10 +111,19 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	}
 
 	connect(runBtn,&QPushButton::toggled, this, &AdcInstrument::run);
+	connect(singleBtn,&QPushButton::toggled, runBtn, &QPushButton::toggled);
+	connect(singleBtn,&QPushButton::toggled, plotAddon, &GRTimePlotAddon::setSingleShot);
+	connect(plotAddon, &GRTimePlotAddon::requestStop, this, &AdcInstrument::stop, Qt::QueuedConnection);
+
 	tool->requestMenu("time__settings");
 	channelGroup->buttons()[0]->setChecked(true);
 
 	init();
+}
+
+AdcInstrument::~AdcInstrument()
+{
+	deinit();
 }
 
 void AdcInstrument::init() {
@@ -143,42 +152,48 @@ void AdcInstrument::deinit() {
 	proxy->getPlotAddon()->onDeinit();
 }
 
+void AdcInstrument::stop() {
+	run(false);
+}
+
 void AdcInstrument::run(bool b) {
 	qInfo()<<b;
 	QElapsedTimer tim;
 	tim.start();
 
+	if(!b) {
+		runBtn->setChecked(false);
+		singleBtn->setChecked(false);
+	}
 
-	qInfo()<<tim.elapsed();
+
+//	qInfo()<<tim.elapsed();
 	for(auto ch : proxy->getChannelAddons()) {
 		if(b)
 			ch->onStart();
 		else
 			ch->onStop();
 	}
-	qInfo()<<tim.elapsed();
+//	qInfo()<<tim.elapsed();
 	for(auto dev : proxy->getDeviceAddons()) {
 		if(b)
 			dev->onStart();
 		else
 			dev->onStop();
 	}
-	qInfo()<<tim.elapsed();
+//	qInfo()<<tim.elapsed();
 
 	if(b)
 		proxy->getPlotSettings()->onStart();
 	else
 		proxy->getPlotSettings()->onStop();
 
-	qInfo()<<tim.elapsed();
+//	qInfo()<<tim.elapsed();
 	if(b)
 		proxy->getPlotAddon()->onStart();
 	else
 		proxy->getPlotAddon()->onStop();
-	qInfo()<<tim.elapsed();
-
-
-
+//	qInfo()<<tim.elapsed();
 }
 
 

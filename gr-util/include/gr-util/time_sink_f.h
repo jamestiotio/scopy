@@ -65,6 +65,9 @@ public:
 	virtual const std::vector<std::vector<float> > &data() const = 0;
 	virtual void setRollingMode(bool) = 0;
 	virtual bool rollingMode() = 0;
+	virtual void setSingleShot(bool) = 0;
+	virtual bool singleShot() = 0;
+	virtual bool finishedAcquisition() = 0;
 };
 
 } /* namespace scopy */

@@ -59,7 +59,13 @@ time_sink_f_impl::time_sink_f_impl(int size, float sampleRate, const std::string
     : sync_block("time_sink_f",
 	io_signature::make(nconnections, nconnections, sizeof(float)),
 	io_signature::make(0, 0, 0)),
-	m_size(size), m_sampleRate(sampleRate), m_name(name), m_nconnections(nconnections), m_rollingMode(false)
+      m_size(size),
+      m_sampleRate(sampleRate),
+      m_name(name),
+      m_nconnections(nconnections),
+      m_rollingMode(false),
+      m_workFinished(false),
+      m_dataUpdated(false)
 {
 	qInfo(CAT_TIME_SINK_F)<<"ctor";
 	// reserve memory for n buffers
@@ -100,6 +106,9 @@ void time_sink_f_impl::updateData() {
 			m_data[i].push_back(m_buffers[i][j]);
 		}
 	}
+	if(m_workFinished) {
+		m_dataUpdated = true;
+	}
 }
 
 bool time_sink_f_impl::rollingMode()
@@ -112,6 +121,21 @@ void time_sink_f_impl::setRollingMode(bool b)
 	m_rollingMode = b;
 }
 
+bool time_sink_f_impl::singleShot()
+{
+	return m_singleShot;
+}
+
+void time_sink_f_impl::setSingleShot(bool b)
+{
+	m_singleShot = b;
+}
+
+bool time_sink_f_impl::finishedAcquisition()
+{
+	return m_workFinished && m_dataUpdated;
+}
+
 const std::vector<float> &time_sink_f_impl::time() const {
 	return m_time;
 }
@@ -119,6 +143,19 @@ const std::vector<float> &time_sink_f_impl::time() const {
 const std::vector<std::vector<float> > &time_sink_f_impl::data() const {
 	return m_data;
 }
+
+bool time_sink_f_impl::start()
+{
+	m_workFinished = false;
+	m_dataUpdated = false;
+	return true;
+}
+
+bool time_sink_f_impl::stop()
+{
+	return true;
+}
+
 
 int time_sink_f_impl::work(int noutput_items,
 		       gr_vector_const_void_star &input_items,
@@ -128,6 +165,13 @@ int time_sink_f_impl::work(int noutput_items,
 	gr::thread::scoped_lock lock(d_setlock);
 
 	// Trigger on BUFFER_START (?)
+	if(m_singleShot) {
+		if(m_buffers[0].size() == m_size) {
+			m_workFinished = true;
+			return WORK_DONE;
+		}
+	}
+
 	if(!m_rollingMode) {
 	for(int i = 0; i < m_nconnections; i++) {
 			if(m_buffers[i].size() >= m_size) {

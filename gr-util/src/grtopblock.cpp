@@ -1,5 +1,6 @@
 #include "grtopblock.h"
 #include "grlog.h"
+#include <QtConcurrent>
 
 Q_LOGGING_CATEGORY(SCOPY_GR_UTIL, "GRManager")
 
@@ -85,6 +86,11 @@ void GRTopBlock::start()
 	Q_EMIT aboutToStart();
 	top->start();
 	Q_EMIT started();
+
+	QtConcurrent::run([=]() {
+		top->wait();
+		Q_EMIT finished();
+	});
 }
 
 void GRTopBlock::stop()

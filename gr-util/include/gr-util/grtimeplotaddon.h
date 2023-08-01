@@ -8,6 +8,9 @@
 #include "time_sink_f.h"
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QFuture>
+#include <QtConcurrent>
+
 
 namespace scopy::grutil {
 using namespace scopy;
@@ -26,6 +29,7 @@ public:
 
 Q_SIGNALS:
 	void requestRebuild();
+	void requestStop();
 
 public Q_SLOTS:
 	void enable() override;
@@ -45,10 +49,14 @@ public Q_SLOTS:
 	void setRollingMode(bool b);
 	void setBufferSize(uint32_t size);
 	void setPlotSize(uint32_t size);
+	void handlePreferences(QString,QVariant);
+	void setSingleShot(bool);
+	void setFrameRate(double);
 
 private Q_SLOTS:
 	void stopPlotRefresh();
 	void startPlotRefresh();
+	void drawPlot();
 
 private:
 	QString name;
@@ -61,11 +69,20 @@ private:
 	QVBoxLayout* m_lay;
 	void setupBufferPreviewer();
 
+	QFuture<void> refillFuture;
+	QFutureWatcher<void> *fw;
+	QMetaObject::Connection futureWatcherConn;
+	std::mutex refillMutex;
+
 	uint32_t m_bufferSize;
 	uint32_t m_plotSize;
+	bool m_started;
 	bool m_rollingMode;
+	bool m_singleShot;
+
 	void setRawSamplesPtr();
 	void updateXAxis();
+	void updateFrameRate();
 };
 }
 
