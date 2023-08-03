@@ -70,10 +70,14 @@ time_sink_f_impl::time_sink_f_impl(int size, float sampleRate, const std::string
 	qInfo(CAT_TIME_SINK_F)<<"ctor";
 	// reserve memory for n buffers
 	m_data.reserve(nconnections);
+	m_dataTags.reserve(nconnections);
+	m_tags.reserve(nconnections);
 
 	for (int i = 0; i < m_nconnections;i++) {
 		m_buffers.push_back(std::deque<float>());
 		m_data.push_back(std::vector<float>());
+		m_tags.push_back(std::vector<tag_t>());
+		m_dataTags.push_back(std::vector<PlotTag_t>());
 		// each data buffer reserves size
 		m_data[i].reserve(size);
 	}
@@ -104,6 +108,16 @@ void time_sink_f_impl::updateData() {
 		m_data[i].clear();
 		for(int j = 0; j < m_buffers[i].size(); j++) {
 			m_data[i].push_back(m_buffers[i][j]);
+		}
+		for(int j = 0 ;j < m_tags[i].size(); j++) {
+			PlotTag_t tag;
+
+			std::stringstream s;
+			s << m_tags[i][j].key << ": " << m_tags[i][j].value;
+			tag.str = QString::fromStdString(s.str());
+			tag.offset = m_tags[i][j].offset;
+
+			m_dataTags[i].push_back(tag);
 		}
 	}
 	if(m_workFinished) {
@@ -144,6 +158,11 @@ const std::vector<std::vector<float> > &time_sink_f_impl::data() const {
 	return m_data;
 }
 
+const std::vector<std::vector<PlotTag_t> > &time_sink_f_impl::tags() const
+{
+	return m_dataTags;
+}
+
 bool time_sink_f_impl::start()
 {
 	m_workFinished = false;
@@ -176,6 +195,7 @@ int time_sink_f_impl::work(int noutput_items,
 	for(int i = 0; i < m_nconnections; i++) {
 			if(m_buffers[i].size() >= m_size) {
 				m_buffers[i].clear();
+				m_tags[i].clear();
 			}
 		}
 	}
@@ -185,11 +205,14 @@ int time_sink_f_impl::work(int noutput_items,
 			if(m_buffers[i].size() >= m_size) {
 				m_buffers[i].pop_back();
 			}
+
 			const float *in;
 			in = (const float*)input_items[i];
 			m_buffers[i].push_front(in[j]);
 		}
+		get_tags_in_window(m_tags[i],i,0,noutput_items);
 	}
+
 
 	return noutput_items;
 

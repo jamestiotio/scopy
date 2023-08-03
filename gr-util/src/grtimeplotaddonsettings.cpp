@@ -108,7 +108,7 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 		 {"k",1e3},
 		 {"M",1e6},
 		 {"G",1e9},
-		 },"XMin",(double)((long)(-1<<31)),(double)((long)1<<31),false,false,xMinMax);
+			},"XMin",(double)((-((long)1<<31))),(double)((long)1<<31),false,false,xMinMax);
 
 	m_xmax = new PositionSpinButton(
 		{
@@ -116,7 +116,7 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 		 {"k",1e3},
 		 {"M",1e6},
 		 {"G",1e9},
-		 },"XMax",(double)((long)(-1<<31)),(double)((long)1<<31),false,false,xMinMax);
+			},"XMax",(double)((-((long)1<<31))),(double)((long)1<<31),false,false,xMinMax);
 
 	auto m_plotAxis = m_plot->plot()->xAxis();
 	// Connects
@@ -152,6 +152,10 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 		 {"GHz",1e9},
 		 },"SampleRate",1,(double)((long)1<<31),false,false,xaxis);
 
+	m_showTagsSw = new MenuOnOffSwitch(tr("SHOW TAGS"), xaxis, false);
+	connect(m_showTagsSw->onOffswitch(), &QAbstractButton::toggled, this, &GRTimePlotAddonSettings::setShowPlotTags);
+	connect(this, &GRTimePlotAddonSettings::showPlotTagsChanged, m_plot, &GRTimePlotAddon::setDrawPlotTags);
+
 	xaxiscontainer->contentLayout()->setSpacing(10);
 	xaxiscontainer->contentLayout()->addWidget(xaxis);
 	xaxis->contentLayout()->addWidget(bufferPlotSize);
@@ -160,9 +164,23 @@ QWidget* GRTimePlotAddonSettings::createXAxisMenu(QWidget* parent) {
 	xaxis->contentLayout()->addWidget(xMinMax);
 	xaxis->contentLayout()->addWidget(cbb);
 	xaxis->contentLayout()->addWidget(m_sampleRateSpin);
+	xaxis->contentLayout()->addWidget(m_showTagsSw);
 	xaxis->contentLayout()->setSpacing(10);
 
 	return xaxiscontainer;
+}
+
+bool GRTimePlotAddonSettings::showPlotTags() const
+{
+	return m_showPlotTags;
+}
+
+void GRTimePlotAddonSettings::setShowPlotTags(bool newShowPlotTags)
+{
+	if (m_showPlotTags == newShowPlotTags)
+		return;
+	m_showPlotTags = newShowPlotTags;
+	Q_EMIT showPlotTagsChanged(m_showPlotTags);
 }
 
 bool GRTimePlotAddonSettings::rollingMode() const

@@ -67,8 +67,10 @@ void GRTopBlock::teardown() {
 	built = false;
 
 	for (GRIIODeviceSource* dev : qAsConst(m_iioDeviceSources)) {
-		dev->disconnect_blk(this);
-		dev->destroy_blks(this);
+		if(dev->built()) {
+			dev->disconnect_blk(this);
+			dev->destroy_blks(this);
+		}
 	}
 
 	for(GRSignalPath* sig : qAsConst(m_signalPaths)) {
