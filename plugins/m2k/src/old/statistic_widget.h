@@ -29,8 +29,8 @@ namespace Ui {
 
 namespace scopy {
 
-class MeasurementData;
-class Statistic;
+class M2kMeasurementData;
+class M2kStatistic;
 class Formatter;
 
 class StatisticWidget: public QWidget
@@ -45,9 +45,9 @@ public:
 
 	void setTitleColor(const QColor& color);
 	void setPositionIndex(int pos);
-
-	void initForMeasurement(const MeasurementData & data);
-	void updateStatistics(const Statistic & data);
+	
+	void initForMeasurement(const M2kMeasurementData & data);
+	void updateStatistics(const M2kStatistic & data);
 
 private:
 	Ui::Statistic *m_ui;

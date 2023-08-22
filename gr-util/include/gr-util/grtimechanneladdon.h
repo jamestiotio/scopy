@@ -6,6 +6,7 @@
 #include "grtimeplotaddon.h"
 #include "griiodevicesource.h"
 #include "griiofloatchannelsrc.h"
+#include "measure.h"
 
 #include <QLabel>
 #include "scopy-gr-util_export.h"
@@ -54,6 +55,8 @@ public Q_SLOTS:
 	void onDeinit() override;
 	void preFlowBuild() override;
 
+	void onNewData(const float* xData, const float* yData, int size);
+
 	void onChannelAdded(ToolAddon*) override;
 	void onChannelRemoved(ToolAddon*) override;
 
@@ -69,6 +72,7 @@ private:
 	GRTimePlotAddon* m_plotAddon;
 	QPen m_pen;
 	QTimer *m_autoScaleTimer;
+	TimeMeasure *m_measure;
 
 	PositionSpinButton *m_ymin;
 	PositionSpinButton *m_ymax;

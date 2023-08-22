@@ -26,7 +26,7 @@
 class QLabel;
 class QColor;
 
-namespace scopy {
+namespace scopy::grutil {
 
 class MeasurementData;
 
@@ -40,7 +40,7 @@ public:
 	QString value() const;
 	void setLabelsColor(const QColor& color);
 	virtual void init(QLabel *name, QLabel *value);
-	virtual void update(const MeasurementData& data, double displayScale) = 0;
+	virtual void update(const MeasurementData& data) = 0;
 
 protected:
 	QString m_name;
@@ -56,7 +56,7 @@ public:
 	MetricMeasurementGui();
 
 	virtual void init(QLabel *name, QLabel *value);
-	virtual void update(const MeasurementData& data, double displayScale);
+	virtual void update(const MeasurementData& data);
 
 protected:
 	MetricPrefixFormatter m_formatter;
@@ -68,7 +68,7 @@ public:
 	TimeMeasurementGui();
 
 	virtual void init(QLabel *name, QLabel *value);
-	virtual void update(const MeasurementData& data, double displayScale);
+	virtual void update(const MeasurementData& data);
 
 protected:
 	TimePrefixFormatter m_formatter;
@@ -80,33 +80,33 @@ public:
 	PercentageMeasurementGui();
 
 	virtual void init(QLabel *name, QLabel *value);
-	virtual void update(const MeasurementData& data, double displayScale);
+	virtual void update(const MeasurementData& data);
 };
 
 class SCOPY_GUI_EXPORT DecibelsMeasurementGui: public MeasurementGui
 {
 public:
-    DecibelsMeasurementGui();
+	DecibelsMeasurementGui();
 
     virtual void init(QLabel *name, QLabel *value);
-    virtual void update(const MeasurementData& data, double displayScale);
+	virtual void update(const MeasurementData& data);
 };
 
 class SCOPY_GUI_EXPORT DecibelstoCarrierMeasurementGui: public MeasurementGui
 {
 public:
-    DecibelstoCarrierMeasurementGui();
+	DecibelstoCarrierMeasurementGui();
 
     virtual void init(QLabel *name, QLabel *value);
-    virtual void update(const MeasurementData& data, double displayScale);
+	virtual void update(const MeasurementData& data);
 };
 
 class SCOPY_GUI_EXPORT DimensionlessMeasurementGui: public MeasurementGui
 {
 public:
 	DimensionlessMeasurementGui();
-
-	virtual void update(const MeasurementData& data, double displayScale);
+	
+	virtual void update(const MeasurementData& data);
 };
 
 } // namespace scopy

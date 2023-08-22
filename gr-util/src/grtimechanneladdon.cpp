@@ -54,6 +54,8 @@ GRTimeChannelAddon::GRTimeChannelAddon(QString ch, GRDeviceAddon *dev, GRTimePlo
 	widget = createMenu();
 	m_sampleRateAvailable = m_grch->sampleRateAvailable();
 
+	m_measure = new TimeMeasure(nullptr, 0);
+	m_measure->setAdcBitCount(m_grch->getFmt()->bits);
 	// - create ADCCount/VFS/V
 }
 
@@ -240,6 +242,7 @@ void GRTimeChannelAddon::disable() {
 
 void GRTimeChannelAddon::onStart() {
 	m_running = true;
+	m_measure->setSampleRate(m_plotAddon->sampleRate());
 	toggleAutoScale();
 }
 
@@ -342,6 +345,13 @@ void GRTimeChannelAddon::preFlowBuild()
 {
 	double m_sampleRate = m_grch->readSampleRate();
 	qInfo()<<"READ SAMPLE RATE" << m_sampleRate;
+}
+
+void GRTimeChannelAddon::onNewData(const float* xData, const float* yData, int size)
+{
+	m_measure->setDataSource(yData, size);
+	m_measure->measure();
+	qInfo()<<m_channelName<<m_measure->measurement("Peak-peak")->value();
 }
 
 void GRTimeChannelAddon::onChannelAdded(ToolAddon *) {}
