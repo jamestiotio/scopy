@@ -8,6 +8,7 @@ TimePlotHDivInfo::TimePlotHDivInfo(QWidget *parent) {
 	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	StyleHelper::TimePlotHDivInfo(this);
 	m_mpf = new MetricPrefixFormatter(this);
+	m_mpf->setTrimZeroes(true);
 
 }
 
@@ -24,7 +25,7 @@ TimePlotSamplingInfo::TimePlotSamplingInfo(QWidget *parent) {
 	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	StyleHelper::TimePlotSamplingInfo(this);
 	m_mpf = new MetricPrefixFormatter(this);
-}
+	m_mpf->setTrimZeroes(true); }
 
 TimePlotSamplingInfo::~TimePlotSamplingInfo()
 {
