@@ -56,7 +56,7 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	stats_panel = new StatsPanel(this);
 	tool->bottomStack()->add(statsMenuId, stats_panel);
 
-	MeasurementSettings* measureSettings = new MeasurementSettings(this);
+	measureSettings = new MeasurementSettings(this);
 	HoverWidget *measurePanelManagerHover = new HoverWidget(nullptr, measure, tool);
 	measurePanelManagerHover->setContent(measureSettings);
 	measurePanelManagerHover->setAnchorPos(HoverPosition::HP_TOPRIGHT);
@@ -100,7 +100,7 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 			tool->requestMenu(settingsMenuId);
 	});
 
-	VerticalChannelManager *vcm = new VerticalChannelManager(this);
+	vcm = new VerticalChannelManager(this);
 	tool->leftStack()->add(verticalChannelManagerId, vcm);
 
 	channelGroup = new QButtonGroup(this);
@@ -121,38 +121,10 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 		});
 		vcm->add(devBtn);
 
-		for(GRTimeChannelAddon* ch : dev->getRegisteredChannels()) {
-			MenuControlButton *btn = new MenuControlButton(devBtn);
+		for(TimeChannelAddon* ch : dev->getRegisteredChannels()) {
+
+			auto btn = addChannel(ch, devBtn);
 			devBtn->add(btn);
-			channelGroup->addButton(btn);
-
-			QString id = ch->getName() + QString::number(uuid++);
-			setupChannelMenuControlButtonHelper(btn, ch);
-
-			channelStack->add(id, ch->getWidget());
-
-			connect(btn, &QAbstractButton::clicked, this, [=](bool b){
-				if(b) {
-					if(!channelsBtn->button()->isChecked()) {
-						// Workaround because QButtonGroup and setChecked do not interact programatically
-						channelsBtn->button()->animateClick(1);
-					}
-
-					plotAddon->plot()->selectChannel(ch->plotCh());
-					channelStack->show(id);
-				}
-			});
-
-			connect(ch,&GRTimeChannelAddon::enableMeasurement, measure_panel, &MeasurementsPanel::addMeasurement);
-			connect(ch,&GRTimeChannelAddon::disableMeasurement, measure_panel, &MeasurementsPanel::removeMeasurement);
-			connect(measureSettings, &MeasurementSettings::toggleAllMeasurements, ch, &GRTimeChannelAddon::toggleAllMeasurement);
-			connect(measureSettings, &MeasurementSettings::toggleAllStats, ch, &GRTimeChannelAddon::toggleAllStats);
-			connect(ch,&GRTimeChannelAddon::enableStat, stats_panel, &StatsPanel::addStat);
-			connect(ch,&GRTimeChannelAddon::disableStat, stats_panel, &StatsPanel::removeStat);
-
-			plotAddon->onChannelAdded(ch);
-			plotAddonSettings->onChannelAdded(ch);
-
 		}
 	}
 
@@ -176,6 +148,43 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 AdcInstrument::~AdcInstrument()
 {
 	deinit();
+}
+
+MenuControlButton* AdcInstrument::addChannel(TimeChannelAddon *ch, QWidget *parent) {
+	MenuControlButton *btn = new MenuControlButton(parent);
+	channelGroup->addButton(btn);
+
+	QString id = ch->getName() + QString::number(uuid++);
+	setupChannelMenuControlButtonHelper(btn, ch);
+
+	channelStack->add(id, ch->getWidget());
+
+	connect(btn, &QAbstractButton::clicked, this, [=](bool b){
+		if(b) {
+			if(!channelsBtn->button()->isChecked()) {
+				// Workaround because QButtonGroup and setChecked do not interact programatically
+				channelsBtn->button()->animateClick(1);
+			}
+
+			plotAddon->plot()->selectChannel(ch->plotCh());
+			channelStack->show(id);
+		}
+	});
+
+	auto measureManager = ch->getMeasureManager();
+	if(measureManager && measureSettings) {
+		connect(measureManager,&MeasureManagerInterface::enableMeasurement, measure_panel, &MeasurementsPanel::addMeasurement);
+		connect(measureManager,&MeasureManagerInterface::disableMeasurement, measure_panel, &MeasurementsPanel::removeMeasurement);
+		connect(measureSettings, &MeasurementSettings::toggleAllMeasurements, measureManager, &MeasureManagerInterface::toggleAllMeasurement);
+		connect(measureSettings, &MeasurementSettings::toggleAllStats, measureManager, &MeasureManagerInterface::toggleAllStats);
+		connect(measureManager,&MeasureManagerInterface::enableStat, stats_panel, &StatsPanel::addStat);
+		connect(measureManager,&MeasureManagerInterface::disableStat, stats_panel, &StatsPanel::removeStat);
+	}
+
+	plotAddon->onChannelAdded(ch);
+	plotAddonSettings->onChannelAdded(ch);
+	return btn;
+
 }
 
 void AdcInstrument::setupCursorButtonHelper(MenuControlButton *cursor) {
@@ -202,7 +211,7 @@ void AdcInstrument::setupDeviceMenuControlButtonHelper(MenuControlButton *devBtn
 	devBtn->setDoubleClickToOpenMenu(true);
 }
 
-void AdcInstrument::setupChannelMenuControlButtonHelper(MenuControlButton *btn, GRTimeChannelAddon *ch) {
+void AdcInstrument::setupChannelMenuControlButtonHelper(MenuControlButton *btn, TimeChannelAddon *ch) {
 	btn->setName(ch->getName());
 	btn->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 	btn->setOpenMenuChecksThis(true);

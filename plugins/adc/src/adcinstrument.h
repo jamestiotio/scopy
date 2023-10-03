@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <adcplugin.h>
 #include "gui/tooltemplate.h"
+#include "measurementsettings.h"
+#include "verticalchannelmanager.h"
 #include <gui/widgets/toolbuttons.h>
 #include <QPushButton>
 
@@ -31,6 +33,7 @@ public Q_SLOTS:
 	void start();
 	void restart();
 	void showMeasurements(bool b);
+	MenuControlButton* addChannel(TimeChannelAddon *ch, QWidget *parent);
 Q_SIGNALS:
 	void runningChanged(bool);
 
@@ -45,10 +48,12 @@ private:
 	MenuControlButton *channelsBtn;
 
 	MeasurementsPanel* measure_panel;
+	MeasurementSettings* measureSettings;
 	StatsPanel* stats_panel;
 
 	GRTimePlotAddon* plotAddon;
 	GRTimePlotAddonSettings* plotAddonSettings;
+	VerticalChannelManager *vcm;
 
 	MapStackedWidget *channelStack;
 	QButtonGroup* rightMenuBtnGrp;
@@ -58,7 +63,7 @@ private:
 	void setupMeasureButtonHelper(MenuControlButton *measure);
 	void setupChannelsButtonHelper(MenuControlButton *channelsBtn);
 	void setupDeviceMenuControlButtonHelper(MenuControlButton *devBtn, GRDeviceAddon *dev);
-	void setupChannelMenuControlButtonHelper(MenuControlButton *btn, GRTimeChannelAddon *ch);
+	void setupChannelMenuControlButtonHelper(MenuControlButton *btn, TimeChannelAddon *ch);
 
 	Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 

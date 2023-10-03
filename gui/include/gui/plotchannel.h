@@ -39,6 +39,8 @@ public:
 	void removeMarker(QwtPlotMarker *m);
 	void addMarker(QwtPlotMarker *m);
 
+	QString name() const;
+
 public Q_SLOTS:
 	void raise();
 	void attach();
@@ -60,6 +62,7 @@ private:
 	QwtPlot *m_plot;
 	QPen m_pen;
 	float *m_data;
+	QString m_name;
 };
 }
 

@@ -12,7 +12,8 @@ PlotChannel::PlotChannel(QString name, QPen pen, PlotWidget *plot, PlotAxis *xAx
 	m_xAxis(xAxis),
 	m_yAxis(yAxis),
 	m_handle(nullptr),
-	m_pen(pen)
+	m_pen(pen),
+	m_name(name)
 
 {
 	m_curve = new QwtPlotCurve(name);
@@ -94,6 +95,11 @@ void PlotChannel::setStyle(int style)
 		break;
 	}
 	m_plot->replot();
+}
+
+QString PlotChannel::name() const
+{
+	return m_name;
 }
 
 QList<QwtPlotMarker *> PlotChannel::markers()

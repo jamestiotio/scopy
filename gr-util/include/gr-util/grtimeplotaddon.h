@@ -25,15 +25,24 @@ class GRTopBlock;
 class GRTimeChannelAddon;
 class GRTimePlotAddonSettings;
 
-class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon, public GRTopAddon {
+
+class SCOPY_GR_UTIL_EXPORT PlotAddon {
+public:
+	virtual PlotWidget *plot() = 0;
+	virtual void replot() = 0;
+	virtual double sampleRate() = 0;
+};
+
+class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon, public PlotAddon, public GRTopAddon {
 	Q_OBJECT
 public:
 	GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent = nullptr);
-	~GRTimePlotAddon();
+	virtual ~GRTimePlotAddon();
 
 	QString getName() override;
 	QWidget *getWidget() override;
-	PlotWidget *plot();
+	PlotWidget *plot() override;
+	double sampleRate() override;
 	int xMode();
 
 Q_SIGNALS:
@@ -56,7 +65,7 @@ public Q_SLOTS:
 	void onChannelAdded(ToolAddon* t) override;
 	void onChannelRemoved(ToolAddon*) override;
 
-	void replot();
+	void replot() override;
 	void connectSignalPaths();
 	void tearDownSignalPaths();
 	void onNewData();
@@ -66,7 +75,6 @@ public Q_SLOTS:
 	void setRollingMode(bool b);
 	void setDrawPlotTags(bool b);
 	void setSampleRate(double);
-	double sampleRate();
 	void setBufferSize(uint32_t size);
 	void setPlotSize(uint32_t size);
 	void handlePreferences(QString,QVariant);
@@ -81,10 +89,10 @@ private Q_SLOTS:
 
 
 private:
-	QString name;
-	QWidget *widget;
 	QTimer *m_plotTimer;
 	GRTopBlock *m_top;
+	QString name;
+	QWidget *widget;
 	PlotWidget *m_plotWidget;
 	PlotCursors *m_cursors;
 	TimePlotInfo *m_info;
