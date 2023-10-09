@@ -14,16 +14,16 @@
 #include <QVBoxLayout>
 #include <QFuture>
 #include <QtConcurrent>
+#include "timechanneladdon.h"
 
 namespace scopy {
 class TimePlotHDivInfo;
 class TimePlotSamplingInfo;
-
 namespace grutil {
-using namespace scopy;
 class GRTopBlock;
 class GRTimeChannelAddon;
 class GRTimePlotAddonSettings;
+class ChannelAddon;
 
 
 class SCOPY_GR_UTIL_EXPORT PlotAddon {
@@ -33,7 +33,7 @@ public:
 	virtual double sampleRate() = 0;
 };
 
-class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon, public PlotAddon, public GRTopAddon {
+class SCOPY_GR_UTIL_EXPORT GRTimePlotAddon : public QObject, public ToolAddon, public ChannelConfigAware, public PlotAddon, public GRTopAddon {
 	Q_OBJECT
 public:
 	GRTimePlotAddon(QString name, GRTopBlock *top, QObject *parent = nullptr);
@@ -62,8 +62,9 @@ public Q_SLOTS:
 	void postFlowStart() override;
 	void preFlowStop() override;
 	void postFlowStop() override;
-	void onChannelAdded(ToolAddon* t) override;
-	void onChannelRemoved(ToolAddon*) override;
+
+	void onChannelAdded(ChannelAddon* t) override;
+	void onChannelRemoved(ChannelAddon* t) override;
 
 	void replot() override;
 	void connectSignalPaths();

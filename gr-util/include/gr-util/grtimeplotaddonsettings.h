@@ -1,6 +1,7 @@
 #ifndef GRTIMEPLOTADDONSETTINGS_H
 #define GRTIMEPLOTADDONSETTINGS_H
 
+#include "time_yautoscale.h"
 #include "tooladdon.h"
 #include "scopy-gr-util_export.h"
 #include <QLabel>
@@ -8,11 +9,14 @@
 #include <gui/spinbox_a.hpp>
 #include <gui/widgets/menuonoffswitch.h>
 #include <gui/widgets/menucombo.h>
+#include "timechanneladdon.h"
 
-namespace scopy::grutil {
+namespace scopy {
+namespace grutil {
+class TimeYControl;
 class GRTimePlotAddon;
 class GRTimeChannelAddon;
-class SCOPY_GR_UTIL_EXPORT GRTimePlotAddonSettings : public QObject, public ToolAddon, public GRTopAddon {
+class SCOPY_GR_UTIL_EXPORT GRTimePlotAddonSettings : public QObject, public ToolAddon, public ChannelConfigAware,  public GRTopAddon {
 	Q_OBJECT
 public:
 	typedef enum {
@@ -49,8 +53,9 @@ public Q_SLOTS:
 	void onInit() override;
 	void onDeinit() override;
 	void preFlowBuild() override;
-	void onChannelAdded(ToolAddon* t) override;
-	void onChannelRemoved(ToolAddon*) override;
+
+	void onChannelAdded(ChannelAddon* t) override;
+	void onChannelRemoved(ChannelAddon* t) override;
 
 	void setBufferSize(uint32_t newBufferSize);
 	void computeSampleRateAvailable();
@@ -62,17 +67,24 @@ Q_SIGNALS:
 	void rollingModeChanged(bool);
 	void showPlotTagsChanged(bool);
 	void sampleRateChanged(double);
+	void singleYMode(bool);
 
 private:
 	QWidget* createMenu(QWidget* parent = nullptr);
 	QWidget* createXAxisMenu(QWidget* parent = nullptr);
+	QWidget *createYAxisMenu(QWidget *parent);
+	double readSampleRate();
 
-private:
 	GRTimePlotAddon* m_plot;
-	QList<GRTimeChannelAddon*> grChannels;
+	QList<ChannelAddon*> channels;
 	QString name;
 	QWidget *widget;
 	QPen m_pen;
+
+	TimeYControl *m_yctrl;
+	MenuOnOffSwitch *m_singleYModeSw;
+	QPushButton *m_autoscaleBtn;
+	TimeYAutoscale *autoscaler;
 
 	ScaleSpinButton *m_bufferSizeSpin;
 	ScaleSpinButton *m_plotSizeSpin;
@@ -100,8 +112,9 @@ private:
 	Q_PROPERTY(bool showPlotTags READ showPlotTags WRITE setShowPlotTags NOTIFY showPlotTagsChanged)
 
 	Q_PROPERTY(double sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged)
-	double readSampleRate();
+
 };
+}
 }
 
 #endif // GRTIMEPLOTADDONSETTINGS_H

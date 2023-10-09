@@ -41,7 +41,17 @@ using namespace grutil;
 // fft sweep addon
 // waterfall plot addon
 
+class SCOPY_ADCPLUGIN_EXPORT ChannelIdProvider : public QObject {
+	Q_OBJECT
+public:
+	ChannelIdProvider(QObject *parent) : QObject(parent) { idx = 0;}
+	virtual ~ChannelIdProvider() {}
 
+	int next() { return idx++;}
+	QPen pen(int idx) {	 return QPen(StyleHelper::getColor("CH"+QString::number(idx)));}
+
+	int idx;
+};
 
 class SCOPY_ADCPLUGIN_EXPORT PlotProxy {
 public:
@@ -73,11 +83,11 @@ public:
 		deviceAddons.removeAll(d);
 	}
 
-	void addChannelAddon(ToolAddon *c) {
+	void addChannelAddon(ChannelAddon *c) {
 		channelAddons.append(c);
 	}
 
-	void removeChannelAddon(ToolAddon *c) {
+	void removeChannelAddon(ChannelAddon *c) {
 		channelAddons.removeAll(c);
 	}
 
@@ -99,6 +109,7 @@ public:
 
 	QList<ToolAddon*> getAddons() override {
 		QList<ToolAddon*> addons;
+
 		addons.append(channelAddons);
 		addons.append(deviceAddons);
 		addons.append(plotSettingsAddon);
@@ -121,7 +132,6 @@ public:
 			}
 		}
 	}
-
 
 	QString getPrefix() { return prefix; }
 	void setPrefix(QString p) { prefix = p;}
@@ -160,6 +170,8 @@ public:
 	void saveSettings(QSettings &) override;
 	void loadSettings(QSettings &) override;
 
+public slots:
+	void addChannel();
 private:
 	iio_context *m_ctx;
 	QWidget *time;

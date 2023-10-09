@@ -224,7 +224,7 @@ void StyleHelper::BlueButton(QPushButton *btn, QString objectName) {
 						}
 
 						QPushButton:disabled {
-							background-color:#4A64FF; /* design token - uiElement*/
+							background-color:#727273; /* design token - uiElement*/
 						}
 
 						QPushButton:checked {
@@ -258,7 +258,7 @@ void StyleHelper::SmallBlueButton(QPushButton *btn, QString objectName) {
 						}
 
 						QPushButton:disabled {
-							background-color:#4A64FF; /* design token - uiElement*/
+							background-color:#727273; /* design token - uiElement*/
 						}
 
 						QPushButton:checked {

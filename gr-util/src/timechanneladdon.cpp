@@ -4,82 +4,69 @@
 #include <menucollapsesection.h>
 #include <menucombo.h>
 #include <QLoggingCategory>
+#include "plotaxishandle.h"
+#include "grtimeplotaddon.h"
 
 Q_LOGGING_CATEGORY(CAT_TIME_CHANNEL, "TimeChannelAddon");
 
 using namespace scopy;
 using namespace scopy::grutil;
 
-TimeChannelAddon::TimeChannelAddon(QString ch, PlotAddon *plotAddon, QPen pen, QObject *parent) :
+ChannelAddon::ChannelAddon(QString ch, PlotAddon *plotAddon, QPen pen, QObject *parent) :
 	QObject(parent), m_channelName(ch), m_plotAddon(plotAddon), m_pen(pen)
 {
 
 }
 
-TimeChannelAddon::~TimeChannelAddon()
+ChannelAddon::~ChannelAddon()
 {
 
 }
 
-QString TimeChannelAddon::getName() {return m_channelName;}
+QString ChannelAddon::getName() {return m_channelName;}
 
-QWidget *TimeChannelAddon::getWidget() {return widget;}
+QWidget *ChannelAddon::getWidget() {return widget;}
 
-void TimeChannelAddon::onStart()
+void ChannelAddon::onStart()
 {
 
 }
 
-void TimeChannelAddon::onStop()
+void ChannelAddon::onStop()
 {
 
 }
 
-void TimeChannelAddon::onInit()
+void ChannelAddon::onInit()
 {
 
 }
 
-void TimeChannelAddon::onDeinit()
+void ChannelAddon::onDeinit()
 {
 
 }
 
-void TimeChannelAddon::onNewData(const float *xData, const float *yData, int size)
+void ChannelAddon::onNewData(const float *xData, const float *yData, int size)
 {
 
 }
 
-void TimeChannelAddon::onChannelAdded(ToolAddon *)
-{
-
-}
-
-void TimeChannelAddon::onChannelRemoved(ToolAddon *)
-{
-
-}
-
-PlotChannel *TimeChannelAddon::plotCh() const
+PlotChannel *ChannelAddon::plotCh() const
 {
 	return m_plotCh;
 }
 
-MeasureManagerInterface *TimeChannelAddon::getMeasureManager()
-{
-	return nullptr;
-}
-
-QPen TimeChannelAddon::pen() const {
+QPen ChannelAddon::pen() const {
 	return m_pen;
 }
 
-bool TimeChannelAddon::enabled() const
+bool ChannelAddon::enabled() const
 {
 	return m_enabled;
 }
 
-void TimeChannelAddon::enable() {
+void ChannelAddon::enable() {
 	qInfo(CAT_TIME_CHANNEL)<<m_channelName<<" enabled";
 	m_enabled = true;
 	m_plotCh->enable();
@@ -90,7 +77,7 @@ void TimeChannelAddon::enable() {
 	//	m_plotAddon->plot()->replot();
 }
 
-void TimeChannelAddon::disable() {
+void ChannelAddon::disable() {
 	qInfo(CAT_TIME_CHANNEL)<<m_channelName<<" disabled";
 	m_enabled = false;
 	m_plotCh->disable();
@@ -101,7 +88,7 @@ void TimeChannelAddon::disable() {
 	//	m_plotAddon->plot()->replot();
 }
 
-QWidget* TimeChannelAddon::createCurveMenu(QWidget* parent) {
+QWidget* ChannelAddon::createCurveMenu(QWidget* parent) {
 
 	MenuSectionWidget *curvecontainer = new MenuSectionWidget(parent);
 	MenuCollapseSection *curve = new MenuCollapseSection("CURVE",MenuCollapseSection::MHCW_NONE, curvecontainer);
@@ -142,4 +129,14 @@ QWidget* TimeChannelAddon::createCurveMenu(QWidget* parent) {
 	curvecontainer->contentLayout()->addWidget(curve);
 
 	return curvecontainer;
+}
+
+TimeChannelAddon::TimeChannelAddon(QString ch, PlotAddon *plotAddon, QPen pen, QObject *parent) : ChannelAddon(ch, plotAddon,pen,parent)
+{
+
+}
+
+TimeChannelAddon::~TimeChannelAddon()
+{
+
 }

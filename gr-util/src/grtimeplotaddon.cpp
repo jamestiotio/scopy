@@ -254,13 +254,13 @@ void GRTimePlotAddon::onStart() {
 
  }
 
-void GRTimePlotAddon::onChannelAdded(ToolAddon *t) {
+void GRTimePlotAddon::onChannelAdded(ChannelAddon *t) {
 	auto ch = dynamic_cast<GRTimeChannelAddon*> (t);
 	if(ch)
 		grChannels.append(ch);
 }
 
-void GRTimePlotAddon::onChannelRemoved(ToolAddon *t) {
+void GRTimePlotAddon::onChannelRemoved(ChannelAddon *t) {
 	auto ch = dynamic_cast<GRTimeChannelAddon*> (t);
 	if(ch)
 		grChannels.removeAll(ch);

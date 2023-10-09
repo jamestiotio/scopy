@@ -20,8 +20,10 @@
 #include "time_yautoscale.h"
 #include "time_ycontrol.h"
 
-namespace scopy::grutil {
+namespace scopy {
+class MenuOnOffSwitch;
 
+namespace grutil {
 class GRDeviceAddon;
 class SCOPY_GR_UTIL_EXPORT GRTimeChannelAddon : public TimeChannelAddon, public GRTopAddon {
 	Q_OBJECT
@@ -40,7 +42,8 @@ public:
 
 	GRSignalPath *signalPath() const;	
 	GRIIOFloatChannelSrc *grch() const;
-	bool sampleRateAvailable() const;
+	bool sampleRateAvailable() override;
+	double sampleRate() override;
 	MeasureManagerInterface* getMeasureManager() override;
 
 public Q_SLOTS:
@@ -54,11 +57,9 @@ public Q_SLOTS:
 
 	void onNewData(const float* xData, const float* yData, int size);
 
-	void onChannelAdded(ToolAddon*) override;
-	void onChannelRemoved(ToolAddon*) override;
-
 	void toggleAutoScale();
 	void setYMode(YMode mode);
+	void setSingleYMode(bool) override;
 
 private:
 	GRDeviceAddon* m_dev;
@@ -69,6 +70,7 @@ private:
 	TimeYControl *m_yCtrl;
 	TimeYAutoscale *m_autoscale;
 	MenuCombo *m_ymodeCb;
+	MenuOnOffSwitch *m_autoscaleBtn;
 
 	bool m_scaleAvailable;
 	bool m_sampleRateAvailable;
@@ -79,5 +81,6 @@ private:
 	QWidget *createMenu(QWidget *parent = nullptr);
 	QWidget *createYAxisMenu(QWidget *parent);
 };
+}
 }
 #endif // GRTIMECHANNELADDON_H

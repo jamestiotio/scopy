@@ -14,6 +14,7 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 {
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	QHBoxLayout *lay = new QHBoxLayout(this);
+	lay->setMargin(0);
 	setLayout(lay);
 	tool = new ToolTemplate(this);
 	tool->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -43,7 +44,6 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 
 	channelsBtn = new MenuControlButton(this);
 	setupChannelsButtonHelper(channelsBtn);
-
 
 	MenuControlButton *cursor = new MenuControlButton(this);
 	setupCursorButtonHelper(cursor);
@@ -107,25 +107,41 @@ AdcInstrument::AdcInstrument(PlotProxy* proxy, QWidget *parent) : QWidget(parent
 	for(auto d: proxy->getDeviceAddons()) {
 		GRDeviceAddon *dev = dynamic_cast<GRDeviceAddon*>(d);
 		if(!dev)
-			return;
-		CollapsableMenuControlButton *devBtn = new CollapsableMenuControlButton(this);
-		setupDeviceMenuControlButtonHelper(devBtn->getControlBtn(), dev);
-		channelGroup->addButton(devBtn->getControlBtn());
-		QString id = dev->getName() + QString::number(uuid++);
-		channelStack->add(id, dev->getWidget());
-		connect(devBtn->getControlBtn(), &QPushButton::toggled, this, [=](bool b) {
-			if(b) {
-				tool->requestMenu(channelsMenuId);
-				channelStack->show(id);
-			}
-		});
+			continue;
+		CollapsableMenuControlButton *devBtn = addDevice(dev, vcm);
 		vcm->add(devBtn);
 
 		for(TimeChannelAddon* ch : dev->getRegisteredChannels()) {
-
 			auto btn = addChannel(ch, devBtn);
 			devBtn->add(btn);
 		}
+	}
+
+	for(ToolAddon* c : proxy->getChannelAddons()) {
+		bool needsBuild = true;
+		ChannelAddon* ch = dynamic_cast<ChannelAddon*>(c);
+		if(!ch)
+			continue;
+
+		// this is hacky - Needs categories as part of the channelAddon (?)
+		// review this on refactor
+		GRTimeChannelAddon *gtch = dynamic_cast<GRTimeChannelAddon*>(ch);
+		if(gtch) {
+			for(auto d: proxy->getDeviceAddons()) {
+				GRDeviceAddon *dev = dynamic_cast<GRDeviceAddon*>(d);
+				if(!dev)
+					continue;
+				if(dev->getRegisteredChannels().contains(gtch)) {
+					needsBuild = false;
+					continue;
+				}
+			}
+		}
+
+		if(!needsBuild)
+			continue;
+		auto btn = addChannel(ch, vcm);
+		vcm->add(btn);
 	}
 
 	connect(runBtn,&QPushButton::toggled, this, &AdcInstrument::setRunning);
@@ -150,7 +166,25 @@ AdcInstrument::~AdcInstrument()
 	deinit();
 }
 
-MenuControlButton* AdcInstrument::addChannel(TimeChannelAddon *ch, QWidget *parent) {
+void AdcInstrument::setupChannelMeasurement(ChannelAddon *ch) {
+	auto chMeasureableChannel = dynamic_cast<MeasurementProvider*>(ch);
+	if(!chMeasureableChannel)
+		return;
+	auto chMeasureManager = chMeasureableChannel->getMeasureManager();
+	if(!chMeasureManager)
+		return;
+	if( measureSettings ) {
+		connect(chMeasureManager,&MeasureManagerInterface::enableMeasurement, measure_panel, &MeasurementsPanel::addMeasurement);
+		connect(chMeasureManager,&MeasureManagerInterface::disableMeasurement, measure_panel, &MeasurementsPanel::removeMeasurement);
+		connect(measureSettings, &MeasurementSettings::toggleAllMeasurements, chMeasureManager, &MeasureManagerInterface::toggleAllMeasurement);
+		connect(measureSettings, &MeasurementSettings::toggleAllStats, chMeasureManager, &MeasureManagerInterface::toggleAllStats);
+		connect(chMeasureManager,&MeasureManagerInterface::enableStat, stats_panel, &StatsPanel::addStat);
+		connect(chMeasureManager,&MeasureManagerInterface::disableStat, stats_panel, &StatsPanel::removeStat);
+	}
+
+}
+
+MenuControlButton* AdcInstrument::addChannel(ChannelAddon *ch, QWidget *parent) {
 	MenuControlButton *btn = new MenuControlButton(parent);
 	channelGroup->addButton(btn);
 
@@ -171,20 +205,27 @@ MenuControlButton* AdcInstrument::addChannel(TimeChannelAddon *ch, QWidget *pare
 		}
 	});
 
-	auto measureManager = ch->getMeasureManager();
-	if(measureManager && measureSettings) {
-		connect(measureManager,&MeasureManagerInterface::enableMeasurement, measure_panel, &MeasurementsPanel::addMeasurement);
-		connect(measureManager,&MeasureManagerInterface::disableMeasurement, measure_panel, &MeasurementsPanel::removeMeasurement);
-		connect(measureSettings, &MeasurementSettings::toggleAllMeasurements, measureManager, &MeasureManagerInterface::toggleAllMeasurement);
-		connect(measureSettings, &MeasurementSettings::toggleAllStats, measureManager, &MeasureManagerInterface::toggleAllStats);
-		connect(measureManager,&MeasureManagerInterface::enableStat, stats_panel, &StatsPanel::addStat);
-		connect(measureManager,&MeasureManagerInterface::disableStat, stats_panel, &StatsPanel::removeStat);
-	}
-
+	setupChannelMeasurement(ch);
 	plotAddon->onChannelAdded(ch);
 	plotAddonSettings->onChannelAdded(ch);
 	return btn;
 
+}
+
+CollapsableMenuControlButton* AdcInstrument::addDevice(GRDeviceAddon *dev, QWidget *parent)
+{
+	auto devBtn = new CollapsableMenuControlButton(parent);
+	setupDeviceMenuControlButtonHelper(devBtn->getControlBtn(), dev);
+	channelGroup->addButton(devBtn->getControlBtn());
+	QString id = dev->getName() + QString::number(uuid++);
+	channelStack->add(id, dev->getWidget());
+	connect(devBtn->getControlBtn(), &QPushButton::toggled, this, [=](bool b) {
+		if(b) {
+			tool->requestMenu(channelsMenuId);
+			channelStack->show(id);
+		}
+	});
+	return devBtn;
 }
 
 void AdcInstrument::setupCursorButtonHelper(MenuControlButton *cursor) {
@@ -211,7 +252,7 @@ void AdcInstrument::setupDeviceMenuControlButtonHelper(MenuControlButton *devBtn
 	devBtn->setDoubleClickToOpenMenu(true);
 }
 
-void AdcInstrument::setupChannelMenuControlButtonHelper(MenuControlButton *btn, TimeChannelAddon *ch) {
+void AdcInstrument::setupChannelMenuControlButtonHelper(MenuControlButton *btn, ChannelAddon *ch) {
 	btn->setName(ch->getName());
 	btn->setCheckBoxStyle(MenuControlButton::CS_CIRCLE);
 	btn->setOpenMenuChecksThis(true);

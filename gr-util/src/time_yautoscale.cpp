@@ -7,7 +7,7 @@ Q_LOGGING_CATEGORY(CAT_TIMEYAUTOSCALE, "Time Y-Autoscale");
 
 using namespace scopy::grutil;
 
-TimeYAutoscale::TimeYAutoscale(QList<PlotChannel*> channels,QObject *parent) : QObject(parent), m_channels(channels)
+TimeYAutoscale::TimeYAutoscale(QObject *parent) : QObject(parent)
 {
 	// AUTOSCALE
 	m_autoScaleTimer = new QTimer(this);
@@ -44,4 +44,14 @@ void TimeYAutoscale::autoscale() {
 	}
 	Q_EMIT newMin(min);
 	Q_EMIT newMax(max);
+}
+
+void TimeYAutoscale::addChannels(PlotChannel *c)
+{
+	m_channels.append(c);
+}
+
+void TimeYAutoscale::removeChannels(PlotChannel *c)
+{
+	m_channels.removeAll(c);
 }

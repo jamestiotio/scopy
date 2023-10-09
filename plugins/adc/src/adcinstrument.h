@@ -33,7 +33,8 @@ public Q_SLOTS:
 	void start();
 	void restart();
 	void showMeasurements(bool b);
-	MenuControlButton* addChannel(TimeChannelAddon *ch, QWidget *parent);
+	MenuControlButton* addChannel(ChannelAddon *ch, QWidget *parent);
+	CollapsableMenuControlButton* addDevice(GRDeviceAddon *dev, QWidget *parent);
 Q_SIGNALS:
 	void runningChanged(bool);
 
@@ -63,7 +64,7 @@ private:
 	void setupMeasureButtonHelper(MenuControlButton *measure);
 	void setupChannelsButtonHelper(MenuControlButton *channelsBtn);
 	void setupDeviceMenuControlButtonHelper(MenuControlButton *devBtn, GRDeviceAddon *dev);
-	void setupChannelMenuControlButtonHelper(MenuControlButton *btn, TimeChannelAddon *ch);
+	void setupChannelMenuControlButtonHelper(MenuControlButton *btn, ChannelAddon *ch);
 
 	Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 
@@ -72,6 +73,7 @@ private:
 	const QString measureMenuId = "measure";
 	const QString statsMenuId = "stats";
 	const QString verticalChannelManagerId = "vcm";
+	void setupChannelMeasurement(ChannelAddon *ch);
 };
 }
 #endif // ADCINSTRUMENT_H

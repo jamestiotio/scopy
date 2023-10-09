@@ -5,17 +5,18 @@
 #include "scopy-gr-util_export.h"
 #include "tooladdon.h"
 #include <plotchannel.h>
-#include "grtimeplotaddon.h"
 #include "measurementcontroller.h"
 
 namespace scopy {
 namespace grutil {
-class SCOPY_GR_UTIL_EXPORT TimeChannelAddon : public QObject, public ToolAddon {
+class PlotAddon;
+
+class SCOPY_GR_UTIL_EXPORT ChannelAddon : public QObject, public ToolAddon {
 	Q_OBJECT
 public:
 
-	TimeChannelAddon(QString ch, PlotAddon* plotAddon, QPen pen, QObject *parent = nullptr);
-	virtual ~TimeChannelAddon();
+	ChannelAddon(QString ch, PlotAddon* plotAddon, QPen pen, QObject *parent = nullptr);
+	virtual ~ChannelAddon();
 
 	QString getName() override;
 	QWidget* getWidget() override;
@@ -24,7 +25,6 @@ public:
 	bool enabled() const;
 	PlotChannel *plotCh() const;
 
-	virtual MeasureManagerInterface* getMeasureManager();
 	virtual QWidget *createCurveMenu(QWidget *parent);
 
 protected:
@@ -48,10 +48,36 @@ public Q_SLOTS:
 	void onDeinit() override;
 
 	void onNewData(const float* xData, const float* yData, int size);
-
-	void onChannelAdded(ToolAddon*) override;
-	void onChannelRemoved(ToolAddon*) override;
 };
+
+class SCOPY_GR_UTIL_EXPORT MeasurementProvider {
+public:
+	virtual MeasureManagerInterface* getMeasureManager() = 0;
+};
+
+class SCOPY_GR_UTIL_EXPORT SampleRateProvider {
+public:
+	virtual bool sampleRateAvailable() = 0;
+	virtual double sampleRate() = 0;
+};
+
+class SCOPY_GR_UTIL_EXPORT ChannelConfigAware {
+public:
+	virtual void onChannelAdded(ChannelAddon*) = 0;
+	virtual void onChannelRemoved(ChannelAddon*) = 0;
+};
+
+class SCOPY_GR_UTIL_EXPORT SingleYModeAware {
+public:
+	virtual void setSingleYMode(bool) = 0;
+};
+
+class SCOPY_GR_UTIL_EXPORT TimeChannelAddon : public ChannelAddon, public SampleRateProvider, public MeasurementProvider, public SingleYModeAware {
+public:
+	TimeChannelAddon(QString ch, PlotAddon* plotAddon, QPen pen, QObject *parent = nullptr);
+	virtual ~TimeChannelAddon();
+};
+
 }
 }
 #endif // TIMECHANNELADDON_H

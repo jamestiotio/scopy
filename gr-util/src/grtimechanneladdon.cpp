@@ -79,20 +79,20 @@ QWidget* GRTimeChannelAddon::createYAxisMenu(QWidget* parent) {
 
 	m_yCtrl = new TimeYControl(m_plotAxis, yaxis);
 
-	MenuOnOffSwitch *autoscaleBtn = new MenuOnOffSwitch(tr("AUTOSCALE"), yaxis, false);
-	auto autoscale_channel_list = QList<PlotChannel*>();
-	autoscale_channel_list.append(m_plotCh);
-	m_autoscale = new TimeYAutoscale(autoscale_channel_list, this);
+	m_autoscaleBtn = new MenuOnOffSwitch(tr("AUTOSCALE"), yaxis, false);
+	m_autoscale = new TimeYAutoscale(this);
+	m_autoscale->addChannels(m_plotCh);
+
 	connect(m_autoscale, &TimeYAutoscale::newMin, m_yCtrl, &TimeYControl::setMin);
 	connect(m_autoscale, &TimeYAutoscale::newMax, m_yCtrl, &TimeYControl::setMax);
 
-	connect(autoscaleBtn->onOffswitch(), &QAbstractButton::toggled, this, [=](bool b){
+	connect(m_autoscaleBtn->onOffswitch(), &QAbstractButton::toggled, this, [=](bool b){
 		m_yCtrl->setEnabled(!b);
 		m_autoscaleEnabled = b;
 		toggleAutoScale();
 	} );
 
-	yaxis->contentLayout()->addWidget(autoscaleBtn);
+	yaxis->contentLayout()->addWidget(m_autoscaleBtn);
 	yaxis->contentLayout()->addWidget(m_yCtrl);
 	yaxis->contentLayout()->addWidget(m_ymodeCb);
 
@@ -158,7 +158,6 @@ void GRTimeChannelAddon::disable() {
 	TimeChannelAddon::disable();
 }
 
-
 void GRTimeChannelAddon::onStart() {
 	m_running = true;
 	m_measureMgr->getModel()->setSampleRate(m_plotAddon->sampleRate());
@@ -222,16 +221,36 @@ void GRTimeChannelAddon::setYMode(YMode mode)
 	m_scOff->setOffset(offset);
 }
 
-bool GRTimeChannelAddon::sampleRateAvailable() const
+void GRTimeChannelAddon::setSingleYMode(bool b)
+{
+	if(b) {
+		m_plotCh->curve()->setYAxis(m_plotAddon->plot()->yAxis()->axisId()); // get default axis
+	}
+	else
+	{
+		m_plotCh->curve()->setYAxis(m_plotAxis->axisId()); // set it's own axis
+	}
+	m_plotAxisHandle->handle()->setVisible(!b);
+	m_yCtrl->setEnabled(!b);
+	m_autoscaleBtn->onOffswitch()->setChecked(false);
+	m_autoscaleBtn->setEnabled(!b);
+
+}
+
+bool GRTimeChannelAddon::sampleRateAvailable()
 {
 	return m_sampleRateAvailable;
+}
+
+double GRTimeChannelAddon::sampleRate()
+{
+	return m_grch->readSampleRate();
 }
 
 MeasureManagerInterface *GRTimeChannelAddon::getMeasureManager()
 {
 	return m_measureMgr;
 }
-
 
 GRIIOFloatChannelSrc *GRTimeChannelAddon::grch() const
 {
@@ -249,21 +268,13 @@ void GRTimeChannelAddon::onDeinit() {}
 
 void GRTimeChannelAddon::preFlowBuild()
 {
-	double m_sampleRate = m_grch->readSampleRate();
-	qInfo()<<"READ SAMPLE RATE" << m_sampleRate;
 }
-
 void GRTimeChannelAddon::onNewData(const float* xData, const float* yData, int size)
 {
 	auto model = m_measureMgr->getModel();
 	model->setDataSource(yData, size);
 	model->measure();
 }
-
-void GRTimeChannelAddon::onChannelAdded(ToolAddon *) {}
-
-void GRTimeChannelAddon::onChannelRemoved(ToolAddon *) {}
-
 
 GRSignalPath *GRTimeChannelAddon::signalPath() const
 {
